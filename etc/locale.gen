@@ -1,0 +1,6 @@
+# generate: locale-gen
+# extra:
+# localectl requires systemd to be pid 1.
+## localectl set-locale LANG=en_US.utf8
+en_US.UTF-8 UTF-8
+C.UTF-8 UTF-8

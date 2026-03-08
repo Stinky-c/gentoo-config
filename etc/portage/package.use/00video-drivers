@@ -1,0 +1,3 @@
+# Note: get the driver name from [here](https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Base#VIDEO_CARDS)
+# Example: */* VIDEO_CARDS: -* <GPU DRIVER NAME>
+*/* VIDEO_CARDS: -* amdgpu radeonsi
