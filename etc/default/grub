@@ -1,0 +1,7 @@
+GRUB_DISTRIBUTOR="Gentoo"
+GRUB_TIMEOUT=12
+GRUB_TIMEOUT_STYLE=menu
+GRUB_CMDLINE_LINUX="zswap.enabled=1 zswap.compressor=lz4 quiet"
+GRUB_DISABLE_OS_PROBER=false
+GRUB_THEME="/boot/grub/themes/gentoo_glass/theme.txt"
+GRUB_DISABLE_LINUX_PARTUUID=false

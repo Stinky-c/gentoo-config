@@ -16,6 +16,13 @@ Ram: 32GB
   - [ ] [[#`/etc/kernel/install.conf`|Kernel install config]]
 - [ ] Niri + [Dotfiles](https://github.com/Stinky-C/dotfiles)
 
+A way to download all configs and copy to correct places. Clones to a temp directory then makes and exracts an archive from the HEAD.
+Tar will preserve permissions on the overwritten files and always start placing files in `/mnt/gentoo`
+
+```sh
+TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-config $TMP_DIR && git -C $TMP_DIR archive HEAD | tar xpv -C /mnt/gentoo
+```
+
 ## Step by Step
 
 1. Network setup
@@ -36,15 +43,14 @@ Ram: 32GB
    6. [`package.use/00video-drivers`](etc/portage/package.use/00video-drivers)
 5. Update extras
    1. Update timezone: `ln -sf ../usr/share/zoneinfo/America/Los_Angeles /etc/localtime`
-   2. Update locales: [`locale.gen`](etc/locale.gen)
+   2. Update locales: [`locale.gen`](etc/locale.gen) and `locale-gen`
 6. Update repos
-   1. `emerge --sync --quiet` first. If this does not work try the next one
-   2. `emerge-webrsync` if behind a firewall
+   1. Update keys: `getuto`
+   2. `emerge --sync --quiet` first. If this does not work try the next one
+   3. `emerge-webrsync` if behind a firewall
 7. Update world
    1. `emerge --ask --verbose --update --deep --newuse --getbinpkg @world`
-8. Boot setup
-   1. Emerge firmware: `emerge --ask sys-kernel/linux-firmware`
-   2. [Boot Setup](#boot-setup)
+8. [Boot setup](#boot-setup)
 
 ## Partition Layout
 
@@ -152,6 +158,7 @@ todo: break up into different stages of configuration
 | `sys-apps/zram-generator`           | See [[#`/etc/systemd/zram-generator.conf`\|zram-generator]] config |                  |
 | `dev-vcs/git`                       |                                                                    |                  |
 | `sys-block/io-scheduler-udev-rules` | Not needed, but may be useful for kernel tuning                    |                  |
+| `sys-apps/bat`                      |                                                                    |
 
 ### File System tools
 
@@ -179,35 +186,43 @@ These do not need to be emerged to boot the system, but they are important for a
 
 ### Stage 5 Packages
 
-| Identifier                     | Selection | Notes                                                            |
-| ------------------------------ | --------- | ---------------------------------------------------------------- |
-| `sys-kernel/installkernel`     | 1         |                                                                  |
-| `sys-kernel/ugrd`              |           | Ram disk generator                                               |
-| `sys-boot/grub`                |           | Boot loader                                                      |
-| `sys-boot/os-prober`           | 3         | Grub tool to locate other OS boot partitions                     |
-| `sys-kernel/gentoo-kernel-bin` | 2         |                                                                  |
-| `sys-boot/shim`                | 3         | Signed secureboot shim to load grub. Signed with Microsoft keys. |
-| `sys-boot/efibootmgr`          | 3         | Used to manage efi vars                                          |
+Do not install any marked that will auto install, and follow numbered ones according to [Boot Setup](#boot-setup)
+
+| Identifier                     | Auto-installed | Notes                                                            |
+| ------------------------------ | -------------- | ---------------------------------------------------------------- |
+| `sys-kernel/installkernel`     | X              |                                                                  |
+| `sys-kernel/ugrd`              | X              | Ram disk generator                                               |
+| `sys-boot/grub`                | X              | Boot loader                                                      |
+| `sys-boot/os-prober`           | 1              | Grub tool to locate other OS boot partitions                     |
+| `sys-kernel/gentoo-kernel-bin` | 2              |                                                                  |
+| `sys-boot/shim`                | 3              | Signed secureboot shim to load grub. Signed with Microsoft keys. |
+| `sys-boot/efibootmgr`          | X              | Used to manage efi vars                                          |
+| `sys-boot/mokutil`             | 3              | Uses to manage Machine Owner Key for shim                        |
+| `sys-kernel/linux-firmware`    | 2              |                                                                  |
 
 ## Boot Setup
 
 Reference [Stage 5 packages](#stage-5-package) for selections to install.
 
 Systemd profiles default to `kernel-install`, and GRUB requires kernels to be installed to `/boot`. Use ugrd for the ram disk and shim for secure boot.
+Ensure [`/etc/portage/package.use/installkernel`] is correctly configured.
 
-Ensure [`/etc/portage/package.use/installkernel`] is correctly configured, then emerge packages from selection 1.
+After `sys-kernel/installkernel` is done, install a dist-kernel (likely `sys-kernel/gentoo-kernel-bin`) then `sys-kernel/linux-firmware`.
 
-After `sys-kernel/installkernel` is done, install a kernel (pick **one** from selection 2).
+After installing the kernel and firmware, use `emerge --config sys-kernel/gentoo-kernel-bin` (or which ever kernel) to ensure firmware is added.
 
-After a kernel installation, setting up grub and shim will give it boot. Install from section 3.
+Finally, extra commmands to finish a grub installation and configuration. Emerge selection 3.
 
 ```sh
 # install grub to /efi
 grub-install --efi-directory=/efi
 # Copy signed shim, mokmanager, and grub
-cp /usr/share/shim/BOOTX64.EFI /efi/EFI/Gentoo/shimx64.efi
-cp /usr/share/shim/mmx64.efi /efi/EFI/Gentoo/mmx64.efi
-cp /usr/lib/grub/grub-x86_64.efi.signed /efi/EFI/Gentoo/grubx64.efi
+cp /usr/share/shim/BOOTX64.EFI /efi/EFI/gentoo/shimx64.efi
+cp /usr/share/shim/mmx64.efi /efi/EFI/gentoo/mmx64.efi
+cp /usr/lib/grub/grub-x86_64.efi.signed /efi/EFI/gentoo/grubx64.efi
+# set efi to use shim to boot grub
+# update disk and part
+efibootmgr --disk /dev/sda --part 1 --create -L "gentoo via shim" -l '\EFI\gentoo\shimx64.efi'
 ```
 
 ## Tricks
