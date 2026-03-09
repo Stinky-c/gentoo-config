@@ -1,0 +1,2 @@
+modules = ["ugrd.fs.fakeudev", "ugrd.fs.resume"]
+kmod_autodetect_lspci = true

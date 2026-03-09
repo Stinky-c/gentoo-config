@@ -1,3 +1,5 @@
+# Gentoo Config
+
 ## Abstract
 
 A Gentoo setup with all the bells and whistles I could want.
@@ -12,8 +14,6 @@ Ram: 32GB
 
 - [ ] Find optimized kernel?
 - [ ] Ugrd initramfs generator?
-  - [ ] [[#`/etc/ugrd/config.toml` |Ugrd config]]
-  - [ ] [[#`/etc/kernel/install.conf`|Kernel install config]]
 - [ ] Niri + [Dotfiles](https://github.com/Stinky-C/dotfiles)
 
 A way to download all configs and copy to correct places. Clones to a temp directory then makes and exracts an archive from the HEAD.
@@ -27,7 +27,7 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
 
 1. Network setup
    1. Use Ethernet for ease of use
-   2. [Handbook: Networking ](https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Networking)
+   2. [Handbook: Networking](https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Networking)
 2. [Partition Layout](#partition-layout)
    1. [Creating the partition](#partition-creation-commands)
    2. Mount after completion
@@ -51,8 +51,11 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
 7. Update world
    1. `emerge --ask --verbose --update --deep --newuse --getbinpkg @world`
 8. [Boot setup](#boot-setup)
+9. [Continuing Setup](#continuing-setup)
 
 ## Partition Layout
+
+This partion layout is important to configure properly in fdisk. When using the proper [partion GUIDs](https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs) systemd can automount everything including root. See [Discoverable Partions Specification](https://uapi-group.org/specifications/specs/discoverable_partitions_specification/)
 
 | Label | FS Type    | Part. Type | Size         | Mount Point | Notes                                                                                                              |
 | ----- | ---------- | ---------- | ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -132,10 +135,6 @@ cp --dereference /etc/resolv.conf /mnt/gentoo/etc/resolv.conf
 arch-chroot /mnt/gentoo
 ```
 
-## Network setup
-
-Install `net-misc/networkmanager` if not added automatically, and configure upon first successful reboot.
-
 ## Packages
 
 todo: break up into different stages of configuration
@@ -190,7 +189,7 @@ Do not install any marked that will auto install, and follow numbered ones accor
 
 | Identifier                     | Auto-installed | Notes                                                            |
 | ------------------------------ | -------------- | ---------------------------------------------------------------- |
-| `sys-kernel/installkernel`     | X              |                                                                  |
+| `sys-kernel/installkernel`     | X              | Manages building, and bundling kernel into initramfs             |
 | `sys-kernel/ugrd`              | X              | Ram disk generator                                               |
 | `sys-boot/grub`                | X              | Boot loader                                                      |
 | `sys-boot/os-prober`           | 1              | Grub tool to locate other OS boot partitions                     |
@@ -202,7 +201,7 @@ Do not install any marked that will auto install, and follow numbered ones accor
 
 ## Boot Setup
 
-Reference [Stage 5 packages](#stage-5-package) for selections to install.
+Reference [Stage 5 packages](#stage-5-packages) for selections to install.
 
 Systemd profiles default to `kernel-install`, and GRUB requires kernels to be installed to `/boot`. Use ugrd for the ram disk and shim for secure boot.
 Ensure [`/etc/portage/package.use/installkernel`] is correctly configured.
@@ -224,6 +223,34 @@ cp /usr/lib/grub/grub-x86_64.efi.signed /efi/EFI/gentoo/grubx64.efi
 # update disk and part
 efibootmgr --disk /dev/sda --part 1 --create -L "gentoo via shim" -l '\EFI\gentoo\shimx64.efi'
 ```
+
+## Continuing Setup
+
+Use systemd setup commands for systemd configuration.
+
+```sh
+# Need a root password
+passwd
+
+# systemd machine setup
+systemd-machine-id-setup
+# follow the prompts
+systemd-firstboot --prompt
+
+# Enables presets and then cleans up
+systemctl preset-all --preset-mode=enable-only
+systemctl preset-all
+
+# be sure to check and enable/disable services as needed here.
+systemctl mask systemd-networkd.service
+systemctl enable systemd-resolved.service
+```
+
+### Networking
+
+networkd is masked. Use `net-misc/networkmanager` with `systemd-resolved` instead.
+
+Emerge `net-misc/networkmanager` and enable at boot `systemctl enable NetworkManager`.
 
 ## Tricks
 
