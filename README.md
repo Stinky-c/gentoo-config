@@ -57,12 +57,12 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
 
 This partion layout is important to configure properly in fdisk. When using the proper [partion GUIDs](https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs) systemd can automount everything including root. See [Discoverable Partions Specification](https://uapi-group.org/specifications/specs/discoverable_partitions_specification/)
 
-| Label | FS Type    | Part. Type | Size         | Mount Point | Notes                                                                                                              |
-| ----- | ---------- | ---------- | ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------ |
-| EFI   | fat32      | EFI        | 1G           | /efi        | Used for only EFI binaries. Leave 0.5G space to increase if needed.                                                |
-| BOOT  | ext4       |            | 1G           | /boot       | A boot partition needed for GRUB configuration stuff.                                                              |
-| SWAP  | swap       | swap       |              |             | [Swap Size - Gentoo Wiki](https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Disks#What_about_swap_space.3F) |
-| ROOT  | LVM + ext4 |            | Rest of disk | /           | A plain ext4 partition.                                                                                            |
+| Label | FS Type    | Part. Type (fdisk)  | Size         | Mount Point | Notes                                                                                                              |
+| ----- | ---------- | ------------------- | ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| EFI   | fat32      | ESP (1)             | 1G           | /efi        | Used for only EFI binaries. Leave 0.5G space to increase if needed.                                                |
+| BOOT  | ext4       | Extended boot (142) | 1G           | /boot       | A boot partition needed for GRUB configuration stuff.                                                              |
+| SWAP  | swap       | Swap (19)           |              |             | [Swap Size - Gentoo Wiki](https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Disks#What_about_swap_space.3F) |
+| ROOT  | LVM + ext4 | LVM (44)            | Rest of disk | /           | A plain ext4 partition.                                                                                            |
 
 ### Partition Creation Commands
 
@@ -148,16 +148,17 @@ todo: break up into different stages of configuration
 
 ## TODO
 
-| Identifier                          | Notes                                                              | System Service   |
-| ----------------------------------- | ------------------------------------------------------------------ | ---------------- |
-| `dev-vsc/git`                       |                                                                    |                  |
-| `sys-apps/mlocate`                  |                                                                    | `updatedb.timer` |
-| `app-shells/bash-completion`        |                                                                    |                  |
-| `app-editors/vim`                   | Vim better than Nano                                               |                  |
-| `sys-apps/zram-generator`           | See [[#`/etc/systemd/zram-generator.conf`\|zram-generator]] config |                  |
-| `dev-vcs/git`                       |                                                                    |                  |
-| `sys-block/io-scheduler-udev-rules` | Not needed, but may be useful for kernel tuning                    |                  |
-| `sys-apps/bat`                      |                                                                    |
+| Identifier                          | Notes                                                                            | System Service   |
+| ----------------------------------- | -------------------------------------------------------------------------------- | ---------------- |
+| `dev-vsc/git`                       |                                                                                  |                  |
+| `sys-apps/mlocate`                  |                                                                                  | `updatedb.timer` |
+| `app-shells/bash-completion`        |                                                                                  |                  |
+| `app-editors/vim`                   | Vim better than Nano                                                             |                  |
+| `sys-apps/zram-generator`           | See [[#`/etc/systemd/zram-generator.conf`\|zram-generator]] config               |                  |
+| `dev-vcs/git`                       |                                                                                  |                  |
+| `sys-block/io-scheduler-udev-rules` | Not needed, but may be useful for kernel tuning                                  |                  |
+| `sys-apps/bat`                      |                                                                                  |                  |
+| `app-portage/gentoolkit`            | Helpful utilies for portage. See [wiki](https://wiki.gentoo.org/wiki/Gentoolkit) |                  |
 
 ### File System tools
 
@@ -196,7 +197,6 @@ Do not install any marked that will auto install, and follow numbered ones accor
 | `sys-kernel/gentoo-kernel-bin` | 2              |                                                                  |
 | `sys-boot/shim`                | 3              | Signed secureboot shim to load grub. Signed with Microsoft keys. |
 | `sys-boot/efibootmgr`          | X              | Used to manage efi vars                                          |
-| `sys-boot/mokutil`             | 3              | Uses to manage Machine Owner Key for shim                        |
 | `sys-kernel/linux-firmware`    | 2              |                                                                  |
 
 ## Boot Setup
@@ -204,7 +204,7 @@ Do not install any marked that will auto install, and follow numbered ones accor
 Reference [Stage 5 packages](#stage-5-packages) for selections to install.
 
 Systemd profiles default to `kernel-install`, and GRUB requires kernels to be installed to `/boot`. Use ugrd for the ram disk and shim for secure boot.
-Ensure [`/etc/portage/package.use/installkernel`] is correctly configured.
+Ensure `/etc/portage/package.use/installkernel` is correctly configured.
 
 After `sys-kernel/installkernel` is done, install a dist-kernel (likely `sys-kernel/gentoo-kernel-bin`) then `sys-kernel/linux-firmware`.
 
