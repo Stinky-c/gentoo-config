@@ -15,6 +15,7 @@ Ram: 32GB
 - [ ] Find optimized kernel?
 - [ ] Ugrd initramfs generator?
 - [ ] Niri + [Dotfiles](https://github.com/Stinky-C/dotfiles)
+- [ ] [Amber-lang](https://docs.amber-lang.com/getting_started/installation) scripts + ebuild
 
 A way to download all configs and copy to correct places. Clones to a temp directory then makes and exracts an archive from the HEAD.
 Tar will preserve permissions on the overwritten files and always start placing files in `/mnt/gentoo`
@@ -48,10 +49,13 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
    1. Update keys: `getuto`
    2. `emerge --sync --quiet` first. If this does not work try the next one
    3. `emerge-webrsync` if behind a firewall
-7. Update world
+7. Update world (optional)
    1. `emerge --ask --verbose --update --deep --newuse --getbinpkg @world`
 8. [Boot setup](#boot-setup)
 9. [Continuing Setup](#continuing-setup)
+
+Final: `dispatch-conf`.
+`z` to keep old
 
 ## Partition Layout
 
@@ -61,7 +65,7 @@ This partion layout is important to configure properly in fdisk. When using the 
 | ----- | ---------- | ------------------- | ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------ |
 | EFI   | fat32      | ESP (1)             | 1G           | /efi        | Used for only EFI binaries. Leave 0.5G space to increase if needed.                                                |
 | BOOT  | ext4       | Extended boot (142) | 1G           | /boot       | A boot partition needed for GRUB configuration stuff.                                                              |
-| SWAP  | swap       | Swap (19)           |              |             | [Swap Size - Gentoo Wiki](https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Disks#What_about_swap_space.3F) |
+| SWAP  | swap       | Swap (19)           | See Notes    |             | [Swap Size - Gentoo Wiki](https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Disks#What_about_swap_space.3F) |
 | ROOT  | LVM + ext4 | LVM (44)            | Rest of disk | /           | A plain ext4 partition.                                                                                            |
 
 ### Partition Creation Commands
@@ -145,24 +149,25 @@ todo: break up into different stages of configuration
 | ------------------------- | ---------------------------------- | --------------------------------------------------------------- |
 | `sys-fs/lvm`              | Auto mounting extra LVM Partitions | `lvm2-monitor.service`                                          |
 | `net-misc/networkmanager` | Network configuration              | `NetworkManager.service` & `NetworkManager-wait-online.service` |
+| `sys-apps/mlocate`        |                                    | `updatedb.timer`                                                |
 
 ## TODO
 
-| Identifier                          | Notes                                                                            | System Service   |
-| ----------------------------------- | -------------------------------------------------------------------------------- | ---------------- |
-| `dev-vsc/git`                       |                                                                                  |                  |
-| `sys-apps/mlocate`                  |                                                                                  | `updatedb.timer` |
-| `app-shells/bash-completion`        |                                                                                  |                  |
-| `app-editors/vim`                   | Vim better than Nano                                                             |                  |
-| `sys-apps/zram-generator`           | See [[#`/etc/systemd/zram-generator.conf`\|zram-generator]] config               |                  |
-| `dev-vcs/git`                       |                                                                                  |                  |
-| `sys-block/io-scheduler-udev-rules` | Not needed, but may be useful for kernel tuning                                  |                  |
-| `sys-apps/bat`                      |                                                                                  |                  |
-| `app-portage/gentoolkit`            | Helpful utilies for portage. See [wiki](https://wiki.gentoo.org/wiki/Gentoolkit) |                  |
+| Identifier                          | Notes                                                                            |
+| ----------------------------------- | -------------------------------------------------------------------------------- |
+| `dev-vsc/git`                       |                                                                                  |
+| `app-shells/bash-completion`        |                                                                                  |
+| `app-editors/vim`                   | Vim better than Nano                                                             |
+| `sys-apps/zram-generator`           | See [[#`/etc/systemd/zram-generator.conf`\|zram-generator]] config               |
+| `sys-block/io-scheduler-udev-rules` | Not needed, but may be useful for kernel tuning                                  |
+| `sys-apps/bat`                      | A more useful pager                                                              |
+| `sys-apps/bat-extras`               | Extras for bat, like batman for man pages                                        |
+| `app-portage/gentoolkit`            | Helpful utilies for portage. See [wiki](https://wiki.gentoo.org/wiki/Gentoolkit) |
+| `app-portage/elogv`                 | ncurses elog viewer                                                              |
 
 ### File System tools
 
-Tools to manage file systems
+## Tools to manage file systems
 
 | Identifier          | File system |
 | ------------------- | ----------- |
@@ -193,7 +198,7 @@ Do not install any marked that will auto install, and follow numbered ones accor
 | `sys-kernel/installkernel`     | X              | Manages building, and bundling kernel into initramfs             |
 | `sys-kernel/ugrd`              | X              | Ram disk generator                                               |
 | `sys-boot/grub`                | X              | Boot loader                                                      |
-| `sys-boot/os-prober`           | 1              | Grub tool to locate other OS boot partitions                     |
+| `sys-boot/os-prober`           | 3              | Grub tool to locate other OS boot partitions                     |
 | `sys-kernel/gentoo-kernel-bin` | 2              |                                                                  |
 | `sys-boot/shim`                | 3              | Signed secureboot shim to load grub. Signed with Microsoft keys. |
 | `sys-boot/efibootmgr`          | X              | Used to manage efi vars                                          |
@@ -215,13 +220,18 @@ Finally, extra commmands to finish a grub installation and configuration. Emerge
 ```sh
 # install grub to /efi
 grub-install --efi-directory=/efi
+grub-mkconfig -o /boot/grub/grub.cfg
+
 # Copy signed shim, mokmanager, and grub
+# use `/usr/local/share/copy-shim.sh` to copy these
 cp /usr/share/shim/BOOTX64.EFI /efi/EFI/gentoo/shimx64.efi
 cp /usr/share/shim/mmx64.efi /efi/EFI/gentoo/mmx64.efi
 cp /usr/lib/grub/grub-x86_64.efi.signed /efi/EFI/gentoo/grubx64.efi
 # set efi to use shim to boot grub
 # update disk and part
 efibootmgr --disk /dev/sda --part 1 --create -L "gentoo via shim" -l '\EFI\gentoo\shimx64.efi'
+# Just double check grub config
+grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
 ## Continuing Setup
@@ -233,7 +243,7 @@ Use systemd setup commands for systemd configuration.
 passwd
 
 # systemd machine setup
-systemd-machine-id-setup
+systemd-machine-id-setup --print
 # follow the prompts
 systemd-firstboot --prompt
 
@@ -251,6 +261,14 @@ systemctl enable systemd-resolved.service
 networkd is masked. Use `net-misc/networkmanager` with `systemd-resolved` instead.
 
 Emerge `net-misc/networkmanager` and enable at boot `systemctl enable NetworkManager`.
+
+## User setup
+
+```sh
+# Follow the prompts
+useradd -m -G wheel,video,usb,audio -s /bin/bash cole
+passwd cole
+```
 
 ## Tricks
 

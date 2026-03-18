@@ -1,5 +1,3 @@
 sys-kernel/installkernel grub ugrd -systemd
-# secureboot installs a signed version of grub. See boot setup for setting up shim
-sys-boot/grub secureboot
 # Dedupe and compress firmware
 sys-kernel/linux-firmware deduplicate compress-zstd
