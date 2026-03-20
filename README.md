@@ -17,6 +17,8 @@ Ram: 32GB
 - [ ] Niri + [Dotfiles](https://github.com/Stinky-C/dotfiles)
 - [ ] [Amber-lang](https://docs.amber-lang.com/getting_started/installation) scripts + ebuild
 
+### Downloading this repo
+
 A way to download all configs and copy to correct places. Clones to a temp directory then makes and exracts an archive from the HEAD.
 Tar will preserve permissions on the overwritten files and always start placing files in `/mnt/gentoo`
 
@@ -36,12 +38,7 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
    1. Unpacking the stage 3 tar
    2. Chroot
 4. Copy portage configurations
-   1. [`make.conf`](etc/portage/make.conf)
-   2. [`repos.conf/gentoo.conf`](etc/portage/repos.conf/gentoo.conf)
-   3. [`repos.conf/guru.conf`](etc/portage/repos.conf/guru.conf)
-   4. [`binrepos.conf/gentoo.conf`](etc/portage/binrepos.conf/gentoobinhost.conf)
-   5. [`package.use/00cpu-flgs`](etc/portage/package.use/00cpu-flags)
-   6. [`package.use/00video-drivers`](etc/portage/package.use/00video-drivers)
+   1. [Quick Download](#downloading-this-repo)
 5. Update extras
    1. Update timezone: `ln -sf ../usr/share/zoneinfo/America/Los_Angeles /etc/localtime`
    2. Update locales: [`locale.gen`](etc/locale.gen) and `locale-gen`
@@ -50,7 +47,7 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
    2. `emerge --sync --quiet` first. If this does not work try the next one
    3. `emerge-webrsync` if behind a firewall
 7. Update world (optional)
-   1. `emerge --ask --verbose --update --deep --newuse --getbinpkg @world`
+   1. `emerge --ask --verbose --update --deep --newuse @world`
 8. [Boot setup](#boot-setup)
 9. [Continuing Setup](#continuing-setup)
 
@@ -158,7 +155,7 @@ todo: break up into different stages of configuration
 | `dev-vsc/git`                       |                                                                                  |
 | `app-shells/bash-completion`        |                                                                                  |
 | `app-editors/vim`                   | Vim better than Nano                                                             |
-| `sys-apps/zram-generator`           | See [[#`/etc/systemd/zram-generator.conf`\|zram-generator]] config               |
+| `sys-apps/zram-generator`           | See [`zram-generator.conf`](etc/systemd/zram-generator.conf) config              |
 | `sys-block/io-scheduler-udev-rules` | Not needed, but may be useful for kernel tuning                                  |
 | `sys-apps/bat`                      | A more useful pager                                                              |
 | `sys-apps/bat-extras`               | Extras for bat, like batman for man pages                                        |
@@ -288,3 +285,8 @@ passwd cole
 - [Project Guru](https://wiki.gentoo.org/wiki/Project:GURU/Information_for_End_Users)
 - [Plymouth](https://wiki.gentoo.org/wiki/Plymouth) - A screen for during boot
 - virtio-fs - [home](https://virtio-fs.gitlab.io/) & [gentoo wiki](https://wiki.gentoo.org/wiki/Virtiofs)
+- [portage patches](https://wiki.gentoo.org/wiki//etc/portage/patches)
+
+## Ccache
+
+Defined in [`ccache.conf`](etc/portage/env/ccache.conf). Apply to a package using `package.env`, ex: [`package.env/firefox`](etc/portage/package.env/firefox)
