@@ -1,0 +1,11 @@
+# Disable networkd
+disable systemd-networkd.service
+disable systemd-networkd.socket
+disable systemd-networkd-generator.service
+disable systemd-networkd-wait-online.service
+
+# Disable homed
+disable systemd-homed.service
+
+# Enable resolvd
+enable systemd-resolved.service

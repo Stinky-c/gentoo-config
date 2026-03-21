@@ -1,0 +1,4 @@
+# https://wiki.gentoo.org/wiki/Firefox
+www-client/firefox -X -telemetry dbus pgo wifi
+
+www-client/firefox-bin wayland

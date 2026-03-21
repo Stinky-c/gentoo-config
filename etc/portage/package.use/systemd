@@ -1,1 +1,2 @@
-sys-apps/systemd -iptables -boot -homed kernel-install
+# curl, importd, and lzma are best for systemd-nspawn
+sys-apps/systemd -iptables -boot -homed kernel-install curl importd lzma

@@ -16,6 +16,7 @@ Ram: 32GB
 - [ ] Ugrd initramfs generator?
 - [ ] Niri + [Dotfiles](https://github.com/Stinky-C/dotfiles)
 - [ ] [Amber-lang](https://docs.amber-lang.com/getting_started/installation) scripts + ebuild
+- [ ] Fix permissions across the system
 
 ### Downloading this repo
 
@@ -101,13 +102,15 @@ lvcreate --extents 100%FREE --name lvol1 vg0
 mkfs.ext4 -L ROOT /dev/vg0/lvol1
 ```
 
+[^](#step-by-step)
+
 ## Stage 3
 
 [Stage 3 Mirrors](https://www.gentoo.org/downloads/mirrors/)
 [Verifying and Validating](https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Stage#Verifying_and_validating)
 
 ```sh
-## Ensure working directroy is the mount partitions
+## Ensure working directory is the mount partitions
 ## This keeps stage3 on the root disk just in case
 cd /mnt/gentoo
 
@@ -136,17 +139,16 @@ cp --dereference /etc/resolv.conf /mnt/gentoo/etc/resolv.conf
 arch-chroot /mnt/gentoo
 ```
 
+[^](#step-by-step)
+
 ## Packages
 
 todo: break up into different stages of configuration
 
 ## Service Packages
 
-| Identifier                | Notes                              | System Service                                                  |
-| ------------------------- | ---------------------------------- | --------------------------------------------------------------- |
-| `sys-fs/lvm`              | Auto mounting extra LVM Partitions | `lvm2-monitor.service`                                          |
-| `net-misc/networkmanager` | Network configuration              | `NetworkManager.service` & `NetworkManager-wait-online.service` |
-| `sys-apps/mlocate`        |                                    | `updatedb.timer`                                                |
+List maintained in [`systemd-setup.sh`](usr/local/share/systemd-setup.sh) and [`10-custom.preset`](etc/systemd/system-preset/10-custom.preset).
+Use the `systemd-setup.sh` script to setup systemd.
 
 ## TODO
 
@@ -161,6 +163,9 @@ todo: break up into different stages of configuration
 | `sys-apps/bat-extras`               | Extras for bat, like batman for man pages                                        |
 | `app-portage/gentoolkit`            | Helpful utilies for portage. See [wiki](https://wiki.gentoo.org/wiki/Gentoolkit) |
 | `app-portage/elogv`                 | ncurses elog viewer                                                              |
+| `sys-apps/mlocate`                  | locate database update daemon                                                    |
+| `dev-util/ccache`                   | C/C++ object caching                                                             |
+| `dev-util/sccache`                  | C/C++/Rust object caching                                                        |
 
 ### File System tools
 
@@ -176,15 +181,15 @@ todo: break up into different stages of configuration
 
 These do not need to be emerged to boot the system, but they are important for a full system.
 
-| Identifier                    | Notes                                        | System Service |
-| ----------------------------- | -------------------------------------------- | -------------- |
-| `gui-wm/niri`                 | AMD64 needs to be unmasked for this package. |                |
-| `gui-apps/xwayland-satellite` | Used for Niri X11 intgeration.               |                |
-| `gui-apps/swaybg`             | Dead simple background for niri.             |                |
-| `gui-apps/swayidle`           | Idle management daemon.                      |                |
-| `gui-apps/swaylock`           | Wayland locking.                             |                |
-| `x11-terms/ghostty`           | Terminal for niri.                           |                |
-| `x11-terms/ghostty-terminfo`  | Term info for ghostty.                       |                |
+| Identifier                    | Notes                                        |
+| ----------------------------- | -------------------------------------------- |
+| `gui-wm/niri`                 | AMD64 needs to be unmasked for this package. |
+| `gui-apps/xwayland-satellite` | Used for Niri X11 intgeration.               |
+| `gui-apps/swaybg`             | Dead simple background for niri.             |
+| `gui-apps/swayidle`           | Idle management daemon.                      |
+| `gui-apps/swaylock`           | Wayland locking.                             |
+| `x11-terms/ghostty`           | Terminal for niri.                           |
+| `x11-terms/ghostty-terminfo`  | Term info for ghostty.                       |
 
 ### Stage 5 Packages
 
@@ -202,6 +207,8 @@ Do not install any marked that will auto install, and follow numbered ones accor
 | `sys-kernel/linux-firmware`    | 2              |                                                                  |
 
 ## Boot Setup
+
+[^](#step-by-step)
 
 Reference [Stage 5 packages](#stage-5-packages) for selections to install.
 
@@ -234,18 +241,15 @@ grub-mkconfig -o /boot/grub/grub.cfg
 ## Continuing Setup
 
 Use systemd setup commands for systemd configuration.
+Use [`systemd-setup.sh`](usr/local/share/systemd-setup.sh) to setup systemd.
 
 ```sh
 # Need a root password
 passwd
 
-# systemd machine setup
+# Sets machine id, hostname, and enables preset services
 systemd-machine-id-setup --print
-# follow the prompts
 systemd-firstboot --prompt
-
-# Enables presets and then cleans up
-systemctl preset-all --preset-mode=enable-only
 systemctl preset-all
 
 # be sure to check and enable/disable services as needed here.
@@ -266,6 +270,8 @@ Emerge `net-misc/networkmanager` and enable at boot `systemctl enable NetworkMan
 useradd -m -G wheel,video,usb,audio -s /bin/bash cole
 passwd cole
 ```
+
+[^](#step-by-step)
 
 ## Tricks
 
@@ -290,3 +296,20 @@ passwd cole
 ## Ccache
 
 Defined in [`ccache.conf`](etc/portage/env/ccache.conf). Apply to a package using `package.env`, ex: [`package.env/firefox`](etc/portage/package.env/firefox)
+
+[`sccache.conf`](etc/portage/env/sccache.conf) may also work.
+
+## Index
+
+a brief description of misc files.
+
+### Scripts
+
+These script are for convivence and are snippets taken from the wiki. They are stored inside `/usr/local/share/`
+
+- [`copy-shim.sh`](usr/local/share/copy-shim.sh)
+  - Copies shim, mokmanager and the signed grub binary to the EFI directory.
+- [`sccache-setup.sh`](usr/local/share/sccache-setup.sh)
+  - Creates and sets permissions for sccache to be used
+- [`systemd-setup.sh`](usr/local/share/systemd-setup.sh)
+  - Configures systemd services before boot. Applies presets and enables/disable/masks services after presets.
