@@ -1,3 +1,7 @@
 # Disbale PPPoE, and iptables. Enable bluetooth, connection-sharing
 # resolvconf is handled by systemd-resolved
 net-misc/networkmanager -ppp -iptables -resolvconf bluetooth elogind nftables connection-sharing systemd policykit
+
+
+# attempt to use nftables by default
+net-firewall/iptables nftables

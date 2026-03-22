@@ -1,0 +1,10 @@
+dev-vcs/git
+app-portage/cpuid2cpuflags
+sys-apps/bat
+sys-apps/bat-extras
+app-portage/gentoolkit
+app-portage/elogv
+sys-apps/mlocate
+dev-util/ccache
+dev-util/sccache
+sys-kernel/modprobed-db

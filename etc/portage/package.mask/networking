@@ -1,2 +1,0 @@
-# disable iptables, use nftables
-net-firewall/iptables

@@ -39,7 +39,7 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
    1. Unpacking the stage 3 tar
    2. Chroot
 4. Copy portage configurations
-   1. [Quick Download](#downloading-this-repo)
+   1. [Quick Download](#downloading-this-repo) (Must execute outside of chroot)
 5. Update extras
    1. Update timezone: `ln -sf ../usr/share/zoneinfo/America/Los_Angeles /etc/localtime`
    2. Update locales: [`locale.gen`](etc/locale.gen) and `locale-gen`
@@ -144,6 +144,7 @@ arch-chroot /mnt/gentoo
 ## Packages
 
 todo: break up into different stages of configuration
+See package sets in [/etc/portage/sets](etc/portage/sets)
 
 ## Service Packages
 
@@ -154,7 +155,8 @@ Use the `systemd-setup.sh` script to setup systemd.
 
 | Identifier                          | Notes                                                                            |
 | ----------------------------------- | -------------------------------------------------------------------------------- |
-| `dev-vsc/git`                       |                                                                                  |
+| `dev-vcs/git`                       |                                                                                  |
+| `app-portage/cpuid2cpuflags`        | Configures CPU Use flags                                                         |
 | `app-shells/bash-completion`        |                                                                                  |
 | `app-editors/vim`                   | Vim better than Nano                                                             |
 | `sys-apps/zram-generator`           | See [`zram-generator.conf`](etc/systemd/zram-generator.conf) config              |
@@ -166,6 +168,7 @@ Use the `systemd-setup.sh` script to setup systemd.
 | `sys-apps/mlocate`                  | locate database update daemon                                                    |
 | `dev-util/ccache`                   | C/C++ object caching                                                             |
 | `dev-util/sccache`                  | C/C++/Rust object caching                                                        |
+| `sys-kernel/modprobed-db`           | Tracks kernel modules to add. Useful for self compiled kernels.                  |
 
 ### File System tools
 
@@ -175,7 +178,7 @@ Use the `systemd-setup.sh` script to setup systemd.
 | ------------------- | ----------- |
 | `sys-fs/e2fsprogs`  | ext4        |
 | `sys-fs/dosfstools` | Fat32       |
-| `sys-fs/lvm`        | LVM         |
+| `sys-fs/lvm2`       | LVM         |
 
 ### DE Packages
 

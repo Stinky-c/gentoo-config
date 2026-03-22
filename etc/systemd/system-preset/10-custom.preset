@@ -9,3 +9,7 @@ disable systemd-homed.service
 
 # Enable resolvd
 enable systemd-resolved.service
+
+# Enable mobprobed-db
+# Useful for when switching to a build kernel later
+enable modprobed-db

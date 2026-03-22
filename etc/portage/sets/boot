@@ -1,0 +1,6 @@
+sys-kernel/installkernel
+sys-kernel/ugrd
+sys-boot/grub
+sys-boot/os-prober
+sys-boot/shim
+sys-boot/efibootmgr
