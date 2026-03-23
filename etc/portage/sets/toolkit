@@ -1,5 +1,6 @@
 dev-vcs/git
 app-portage/cpuid2cpuflags
+app-shells/bash-completion
 sys-apps/bat
 sys-apps/bat-extras
 app-portage/gentoolkit
@@ -8,3 +9,5 @@ sys-apps/mlocate
 dev-util/ccache
 dev-util/sccache
 sys-kernel/modprobed-db
+app-misc/jq
+app-admin/sudo

@@ -1,2 +1,11 @@
-modules = ["ugrd.fs.fakeudev", "ugrd.fs.resume"]
+modules = [
+    "ugrd.base.base",
+    "ugrd.base.console",
+    "ugrd.fs.lvm",
+    "ugrd.fs.fakeudev",
+    "ugrd.fs.resume",
+]
 kmod_autodetect_lspci = true
+
+autodetect_lvm = true
+late_resume = true    # Attempt to support lvm + hibernate

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
 
 DISABLED=(
     'systemd-homed.service'
@@ -19,11 +19,6 @@ MASKED=(
     'systemd-networkd-wait-online.service'
 )
 
-locate_service() {
-    find /{lib,etc}/systemd/{user,system}/ -name $1
-    return $?
-}
-
 
 systemd-machine-id-setup --print
 systemd-firstboot --prompt
@@ -31,17 +26,17 @@ systemctl preset-all
 
 
 
-for service in "${DISABLED[@]}"
-do
+# Should not fail if missing service
+set +e
+set -x
+for service in "${DISABLED[@]}"; do
     systemctl disable $service
-end
+done
 
-for service in "${ENABLED[@]}"
-do
+for service in "${ENABLED[@]}"; do
     systemctl enable $service
-end
+done
 
-for service in "${MASKED[@]}"
-do
+for service in "${MASKED[@]}"; do
     systemctl mask $service
-end
+done

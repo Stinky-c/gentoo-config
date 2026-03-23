@@ -37,7 +37,8 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
    2. Mount after completion
 3. [Stage 3](#stage-3)
    1. Unpacking the stage 3 tar
-   2. Chroot
+   2. Generate the fstab: `genfstab -U /mnt/gentoo`
+   3. Chroot
 4. Copy portage configurations
    1. [Quick Download](#downloading-this-repo) (Must execute outside of chroot)
 5. Update extras
@@ -49,7 +50,10 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
    3. `emerge-webrsync` if behind a firewall
 7. Update world (optional)
    1. `emerge --ask --verbose --update --deep --newuse @world`
+   2. Emerge [`@toolkit`](#toolkit-set) and [`@fstools`](#fstools-set)
 8. [Boot setup](#boot-setup)
+   1. Install a kernel (`sys-kernel/gentoo-kernel-bin`)
+   2. Emerge [`@boot`](#boot-set)
 9. [Continuing Setup](#continuing-setup)
 
 Final: `dispatch-conf`.
@@ -57,7 +61,7 @@ Final: `dispatch-conf`.
 
 ## Partition Layout
 
-This partion layout is important to configure properly in fdisk. When using the proper [partion GUIDs](https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs) systemd can automount everything including root. See [Discoverable Partions Specification](https://uapi-group.org/specifications/specs/discoverable_partitions_specification/)
+This partion layout is important to configure properly in fdisk. When using the proper [partion GUIDs](https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs) systemd can automount everything including root. See [Discoverable Partions Specification](https://uapi-group.org/specifications/specs/discoverable_partitions_specification/).
 
 | Label | FS Type    | Part. Type (fdisk)  | Size         | Mount Point | Notes                                                                                                              |
 | ----- | ---------- | ------------------- | ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -143,36 +147,47 @@ arch-chroot /mnt/gentoo
 
 ## Packages
 
-todo: break up into different stages of configuration
 See package sets in [/etc/portage/sets](etc/portage/sets)
 
-## Service Packages
+### Service Packages
 
 List maintained in [`systemd-setup.sh`](usr/local/share/systemd-setup.sh) and [`10-custom.preset`](etc/systemd/system-preset/10-custom.preset).
 Use the `systemd-setup.sh` script to setup systemd.
 
-## TODO
+### Unsorted
 
-| Identifier                          | Notes                                                                            |
-| ----------------------------------- | -------------------------------------------------------------------------------- |
-| `dev-vcs/git`                       |                                                                                  |
-| `app-portage/cpuid2cpuflags`        | Configures CPU Use flags                                                         |
-| `app-shells/bash-completion`        |                                                                                  |
-| `app-editors/vim`                   | Vim better than Nano                                                             |
-| `sys-apps/zram-generator`           | See [`zram-generator.conf`](etc/systemd/zram-generator.conf) config              |
-| `sys-block/io-scheduler-udev-rules` | Not needed, but may be useful for kernel tuning                                  |
-| `sys-apps/bat`                      | A more useful pager                                                              |
-| `sys-apps/bat-extras`               | Extras for bat, like batman for man pages                                        |
-| `app-portage/gentoolkit`            | Helpful utilies for portage. See [wiki](https://wiki.gentoo.org/wiki/Gentoolkit) |
-| `app-portage/elogv`                 | ncurses elog viewer                                                              |
-| `sys-apps/mlocate`                  | locate database update daemon                                                    |
-| `dev-util/ccache`                   | C/C++ object caching                                                             |
-| `dev-util/sccache`                  | C/C++/Rust object caching                                                        |
-| `sys-kernel/modprobed-db`           | Tracks kernel modules to add. Useful for self compiled kernels.                  |
+| Identifier                          | Notes                                                               |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| `app-editors/vim`                   | Vim better than Nano                                                |
+| `sys-apps/zram-generator`           | See [`zram-generator.conf`](etc/systemd/zram-generator.conf) config |
+| `sys-block/io-scheduler-udev-rules` | Not needed, but may be useful for kernel tuning                     |
 
-### File System tools
+### Networking Set
 
-## Tools to manage file systems
+| Identifier                | Notes                  |
+| ------------------------- | ---------------------- |
+| `net-misc/networkmanager` | Chosen network manager |
+| `net-vpn/wireguard-tools` | Wireguard stuff        |
+| `net-vpn/tailscale`       |                        |
+
+### Toolkit Set
+
+| Identifier                   | Notes                                                                            |
+| ---------------------------- | -------------------------------------------------------------------------------- |
+| `dev-vcs/git`                |                                                                                  |
+| `app-portage/cpuid2cpuflags` | Configures CPU Use flags                                                         |
+| `app-shells/bash-completion` |                                                                                  |
+| `sys-apps/bat`               | A more useful pager                                                              |
+| `sys-apps/bat-extras`        | Extras for bat, like batman for man pages                                        |
+| `app-portage/gentoolkit`     | Helpful utilies for portage. See [wiki](https://wiki.gentoo.org/wiki/Gentoolkit) |
+| `app-portage/elogv`          | ncurses elog viewer                                                              |
+| `sys-apps/mlocate`           | locate database update daemon                                                    |
+| `dev-util/ccache`            | C/C++ object caching                                                             |
+| `dev-util/sccache`           | C/C++/Rust object caching                                                        |
+| `sys-kernel/modprobed-db`    | Tracks kernel modules to add. Useful for self compiled kernels.                  |
+| `app-misc/jq`                | Used in my genfstab tool                                                         |
+
+### FS Tools Set
 
 | Identifier          | File system |
 | ------------------- | ----------- |
@@ -194,26 +209,27 @@ These do not need to be emerged to boot the system, but they are important for a
 | `x11-terms/ghostty`           | Terminal for niri.                           |
 | `x11-terms/ghostty-terminfo`  | Term info for ghostty.                       |
 
-### Stage 5 Packages
+### Boot Set
 
-Do not install any marked that will auto install, and follow numbered ones according to [Boot Setup](#boot-setup)
+| Identifier                     | Notes |
+| ------------------------------ | ----- |
+| `sys-kernel/gentoo-kernel-bin` |       |
+| `sys-kernel/linux-firmware`    |       |
 
-| Identifier                     | Auto-installed | Notes                                                            |
-| ------------------------------ | -------------- | ---------------------------------------------------------------- |
-| `sys-kernel/installkernel`     | X              | Manages building, and bundling kernel into initramfs             |
-| `sys-kernel/ugrd`              | X              | Ram disk generator                                               |
-| `sys-boot/grub`                | X              | Boot loader                                                      |
-| `sys-boot/os-prober`           | 3              | Grub tool to locate other OS boot partitions                     |
-| `sys-kernel/gentoo-kernel-bin` | 2              |                                                                  |
-| `sys-boot/shim`                | 3              | Signed secureboot shim to load grub. Signed with Microsoft keys. |
-| `sys-boot/efibootmgr`          | X              | Used to manage efi vars                                          |
-| `sys-kernel/linux-firmware`    | 2              |                                                                  |
+| Identifier                 | Notes                                                            |
+| -------------------------- | ---------------------------------------------------------------- |
+| `sys-kernel/installkernel` | Manages building, and bundling kernel into initramfs             |
+| `sys-kernel/ugrd`          | Ram disk generator                                               |
+| `sys-boot/grub`            | Boot loader                                                      |
+| `sys-boot/os-prober`       | Grub tool to locate other OS boot partitions                     |
+| `sys-boot/shim`            | Signed secureboot shim to load grub. Signed with Microsoft keys. |
+| `sys-boot/efibootmgr`      | Used to manage efi vars                                          |
 
 ## Boot Setup
 
 [^](#step-by-step)
 
-Reference [Stage 5 packages](#stage-5-packages) for selections to install.
+Install the [`@boot`](#boot-set) set for all relvant packages
 
 Systemd profiles default to `kernel-install`, and GRUB requires kernels to be installed to `/boot`. Use ugrd for the ram disk and shim for secure boot.
 Ensure `/etc/portage/package.use/installkernel` is correctly configured.
@@ -237,8 +253,6 @@ cp /usr/lib/grub/grub-x86_64.efi.signed /efi/EFI/gentoo/grubx64.efi
 # set efi to use shim to boot grub
 # update disk and part
 efibootmgr --disk /dev/sda --part 1 --create -L "gentoo via shim" -l '\EFI\gentoo\shimx64.efi'
-# Just double check grub config
-grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
 ## Continuing Setup
@@ -262,7 +276,7 @@ systemctl enable systemd-resolved.service
 
 ### Networking
 
-networkd is masked. Use `net-misc/networkmanager` with `systemd-resolved` instead.
+Use `net-misc/networkmanager` with `systemd-resolved`.
 
 Emerge `net-misc/networkmanager` and enable at boot `systemctl enable NetworkManager`.
 
@@ -316,3 +330,7 @@ These script are for convivence and are snippets taken from the wiki. They are s
   - Creates and sets permissions for sccache to be used
 - [`systemd-setup.sh`](usr/local/share/systemd-setup.sh)
   - Configures systemd services before boot. Applies presets and enables/disable/masks services after presets.
+- [`mkfstab.sh`](usr/local/share/mkfstab.sh)
+  - I forgot genfstab from arch existed
+- [`genfstab`](usr/local/share/genfstab)
+  - The genfstab script copied from [glacion/genfstab](https://github.com/glacion/genfstab/tree/master).

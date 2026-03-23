@@ -1,3 +1,7 @@
 sys-kernel/installkernel grub ugrd -systemd
+
 # Dedupe and compress firmware
 sys-kernel/linux-firmware deduplicate compress-zstd
+
+# os-prober depends on mount for grub
+sys-boot/grub mount
