@@ -1,0 +1,5 @@
+# ugrd 2.2.0 was still masked at the time of this creation
+# This just makes it so late_resume is available
+=sys-kernel/ugrd-2.2.0::gentoo ~amd64
+=dev-python/zenlib-3.3.0::gentoo ~amd64
+=dev-python/pycpio-1.7.0::gentoo ~amd64

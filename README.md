@@ -46,11 +46,12 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
    2. Update locales: [`locale.gen`](etc/locale.gen) and `locale-gen`
 6. Update repos
    1. Update keys: `getuto`
-   2. `emerge --sync --quiet` first. If this does not work try the next one
-   3. `emerge-webrsync` if behind a firewall
+   2. Oneshot git for now: `emerge --ask --oneshot dev-vcs/git`
+   3. `emerge --sync --quiet` first. If this does not work try the next one
+   4. `emerge-webrsync` if behind a firewall
 7. Update world (optional)
    1. `emerge --ask --verbose --update --deep --newuse @world`
-   2. Emerge [`@toolkit`](#toolkit-set) and [`@fstools`](#fstools-set)
+   2. Emerge [`@toolkit`](#toolkit-set), [`@fstools`](#fstools-set), and [`@networking`](#networking-set)
 8. [Boot setup](#boot-setup)
    1. Install a kernel (`sys-kernel/gentoo-kernel-bin`)
    2. Emerge [`@boot`](#boot-set)
@@ -229,14 +230,9 @@ These do not need to be emerged to boot the system, but they are important for a
 
 [^](#step-by-step)
 
-Install the [`@boot`](#boot-set) set for all relvant packages
-
 Systemd profiles default to `kernel-install`, and GRUB requires kernels to be installed to `/boot`. Use ugrd for the ram disk and shim for secure boot.
-Ensure `/etc/portage/package.use/installkernel` is correctly configured.
 
-After `sys-kernel/installkernel` is done, install a dist-kernel (likely `sys-kernel/gentoo-kernel-bin`) then `sys-kernel/linux-firmware`.
-
-After installing the kernel and firmware, use `emerge --config sys-kernel/gentoo-kernel-bin` (or which ever kernel) to ensure firmware is added.
+Emerge a kernel (`sys-kernel/gentoo-kernel-bin`), then firmware (`sys-kernel/linux-firmware`), reconfigure the kernel, and finally install [`@boot`](#boot-set)
 
 Finally, extra commmands to finish a grub installation and configuration. Emerge selection 3.
 
@@ -253,6 +249,9 @@ cp /usr/lib/grub/grub-x86_64.efi.signed /efi/EFI/gentoo/grubx64.efi
 # set efi to use shim to boot grub
 # update disk and part
 efibootmgr --disk /dev/sda --part 1 --create -L "gentoo via shim" -l '\EFI\gentoo\shimx64.efi'
+
+# Use -B to delete record and -b to specify which record
+efibootmgr -B -b <num>
 ```
 
 ## Continuing Setup

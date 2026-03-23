@@ -28,7 +28,6 @@ systemctl preset-all
 
 # Should not fail if missing service
 set +e
-set -x
 for service in "${DISABLED[@]}"; do
     systemctl disable $service
 done
