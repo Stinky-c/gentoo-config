@@ -1,0 +1,62 @@
+#!/bin/bash
+set -euo pipefail
+shopt -s nocasematch
+shopt -s extglob
+
+# Use a recursive method to preview, cat or fzf
+
+# 4 cases
+# help command
+# [0] number wrapped in brackets: display news contents
+# 0 bare number: display it in a pager
+# / slash: use fzf to pick content
+# no input
+
+
+if [ -z "$@" ]; then
+    ITEM="list"
+else
+    ITEM="$@"
+fi
+
+help() {
+    echo "idk figure it out"
+}
+
+preview_news(){
+    eselect --color news --mbox --raw read "$1"
+}
+
+list_news(){
+    eselect news list "${1:-all}" | tail -n +2
+}
+
+cat_news(){
+    eselect --color news read "$1"
+}
+
+
+case "$ITEM" in
+    --help|-h|help|h)
+        help()
+        ;;
+
+    [0-9]*)
+        cat_news() | bat --color -lmbx
+        ;;
+
+    \[[0-9]*\])
+        preview_news()
+        # no special previewing here
+        ;;
+
+    list)
+        list_news() | fzf --ansi --layout=reverse-list --preview "$0 $(echo {} | awk '{print $1}') | bat --color -lmbx" | awk '{print $1}' | tr -d '[]' | xargs "$0"
+        ;;
+
+    *)
+        echo "Bad input"
+        exit 1
+        ;;
+esac
+exit 0
