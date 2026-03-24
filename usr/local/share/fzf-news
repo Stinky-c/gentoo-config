@@ -38,20 +38,18 @@ cat_news(){
 
 case "$ITEM" in
     --help|-h|help|h)
-        help()
+        help
         ;;
-
     [0-9]*)
-        cat_news() | bat --color -lmbx
+        cat_news "$ITEM" | bat --color -lmbx
         ;;
 
     \[[0-9]*\])
-        preview_news()
+        preview_news "$ITEM"
         # no special previewing here
         ;;
-
-    list)
-        list_news() | fzf --ansi --layout=reverse-list --preview "$0 $(echo {} | awk '{print $1}') | bat --color -lmbx" | awk '{print $1}' | tr -d '[]' | xargs "$0"
+    "list")
+        list_news | fzf --ansi --layout=reverse-list --preview "$0 $(echo {} | awk '{print $1}') | bat --color=always -lmbx" | awk '{print $1}' | tr -d '[]'
         ;;
 
     *)
@@ -60,3 +58,7 @@ case "$ITEM" in
         ;;
 esac
 exit 0
+
+
+# Use with --with-nth
+# {n} = index
