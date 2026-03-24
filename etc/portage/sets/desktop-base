@@ -1,0 +1,10 @@
+gui-wm/niri
+sys-apps/xdg-desktop-portal
+sys-apps/xdg-desktop-portal-gtk
+sys-apps/xdg-desktop-portal-gnom
+gnome-base/gnome-keyring
+mate-extra/mate-polkit
+x11-terms/ghostty
+media-fonts/monaspace
+media-fonts/jetbrains-mono
+app-misc/fastfetch

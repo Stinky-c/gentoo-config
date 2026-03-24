@@ -1,0 +1,4 @@
+# I dont need graphical or sound support
+# I will use a better ide
+# this can also make it possibly use a bin package 
+app-editors/vim -wayland -sound -gpm

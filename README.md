@@ -10,14 +10,6 @@ Includes secure boot, and optionally zram backed build directory. This serves as
 CPU: AMD Ryzen 7 7735U with Radeon Graphics
 Ram: 32GB
 
-### Notes
-
-- [ ] Find optimized kernel?
-- [ ] Ugrd initramfs generator?
-- [ ] Niri + [Dotfiles](https://github.com/Stinky-C/dotfiles)
-- [ ] [Amber-lang](https://docs.amber-lang.com/getting_started/installation) scripts + ebuild
-- [ ] Fix permissions across the system
-
 ### Downloading this repo
 
 A way to download all configs and copy to correct places. Clones to a temp directory then makes and exracts an archive from the HEAD.
@@ -196,20 +188,6 @@ Use the `systemd-setup.sh` script to setup systemd.
 | `sys-fs/dosfstools` | Fat32       |
 | `sys-fs/lvm2`       | LVM         |
 
-### DE Packages
-
-These do not need to be emerged to boot the system, but they are important for a full system.
-
-| Identifier                    | Notes                                        |
-| ----------------------------- | -------------------------------------------- |
-| `gui-wm/niri`                 | AMD64 needs to be unmasked for this package. |
-| `gui-apps/xwayland-satellite` | Used for Niri X11 intgeration.               |
-| `gui-apps/swaybg`             | Dead simple background for niri.             |
-| `gui-apps/swayidle`           | Idle management daemon.                      |
-| `gui-apps/swaylock`           | Wayland locking.                             |
-| `x11-terms/ghostty`           | Terminal for niri.                           |
-| `x11-terms/ghostty-terminfo`  | Term info for ghostty.                       |
-
 ### Boot Set
 
 | Identifier                     | Notes |
@@ -225,6 +203,46 @@ These do not need to be emerged to boot the system, but they are important for a
 | `sys-boot/os-prober`       | Grub tool to locate other OS boot partitions                     |
 | `sys-boot/shim`            | Signed secureboot shim to load grub. Signed with Microsoft keys. |
 | `sys-boot/efibootmgr`      | Used to manage efi vars                                          |
+
+### Desktop Set
+
+Able to pull in zig as a binpkg to prevent ghostty building it from source. `emerge --ask --oneshot dev-lang/zig-bin`
+
+Skip installing [mise](https://mise.jdx.dev/) via portage. I like how fast mise moves and would prefer to use that way.
+
+| Identifier                          | Notes                                      |
+| ----------------------------------- | ------------------------------------------ |
+| `gui-wm/niri`                       |                                            |
+| `sys-apps/xdg-desktop-portal`       |                                            |
+| `sys-apps/xdg-desktop-portal-gtk`   | Niri docs recommend gtk as primary         |
+| `sys-apps/xdg-desktop-portal-gnome` | then gnome as secondary                    |
+| `gnome-base/gnome-keyring`          | Secret manager                             |
+| `mate-extra/mate-polkit`            | gnome polkit is unmaintained               |
+| `x11-terms/ghostty`                 |                                            |
+| `media-fonts/monaspace`             | My primary monospace font. Present in guru |
+| `media-fonts/jetbrains-mono`        | My fallback monospace font                 |
+| `app-misc/fastfetch`                | pointless but fun                          |
+
+### Noctalia Set
+
+Testing out [noctalia](https://noctalia.dev/) to see if I like it.
+
+| Identifier                | Notes                              |
+| ------------------------- | ---------------------------------- |
+| `gui-apps/noctalia-shell` | [docs](https://docs.noctalia.dev/) |
+
+### Dotfiles Set
+
+See my [dotfiles](https://github.com/Stinky-c/dotfiles/tree/desktop-niri)
+
+| Identifier            | Notes                            |
+| --------------------- | -------------------------------- |
+| `gui-apps/swaybg`     | Dead simple background for niri. |
+| `gui-apps/swayidle`   | Idle management daemon.          |
+| `gui-apps/swaylock`   | Wayland locking.                 |
+| `gui-apps/mako`       | Notifcation daemon               |
+| `gui-apps/waybar`     |                                  |
+| `app-shells/starship` | Cool terminal prompt             |
 
 ## Boot Setup
 
@@ -314,6 +332,10 @@ passwd cole
 Defined in [`ccache.conf`](etc/portage/env/ccache.conf). Apply to a package using `package.env`, ex: [`package.env/firefox`](etc/portage/package.env/firefox)
 
 [`sccache.conf`](etc/portage/env/sccache.conf) may also work.
+
+## Desktop
+
+emerge [`@noctalia`](#noctalia-set) or [`@dotfiles`](#dotfiles-set)
 
 ## Index
 

@@ -1,0 +1,7 @@
+=gui-wm/niri-9999::guru **
+gui-apps/xwayland-satellite ~amd64
+
+
+gui-apps/noctalia-shell ~amd64
+gui-apps/noctalia-qs ~amd64
+app-misc/brightnessctl ~amd64

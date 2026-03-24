@@ -1,0 +1,8 @@
+# include base
+@desktop-base
+
+gui-apps/swaybg
+gui-apps/swayidle
+gui-apps/swayidle
+gui-apps/mako
+gui-apps/waybar

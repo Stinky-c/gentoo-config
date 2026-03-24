@@ -11,3 +11,5 @@ dev-util/sccache
 sys-kernel/modprobed-db
 app-misc/jq
 app-admin/sudo
+app-editors/vim
+app-eselect/eselect-repository

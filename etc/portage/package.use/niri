@@ -1,0 +1,3 @@
+gui-wm/niri dbus screencast systemd
+gui-apps/xwayland-satellite
+sys-apps/xdg-desktop-portal flatpak udev systemd
