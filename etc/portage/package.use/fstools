@@ -1,1 +1,1 @@
-sys-fs/lvm2 lvm
+sys-fs/lvm2 lvm nvme thin vdo

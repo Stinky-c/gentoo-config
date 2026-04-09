@@ -4,4 +4,7 @@ sys-kernel/installkernel grub ugrd -systemd
 sys-kernel/linux-firmware deduplicate compress-zstd
 
 # os-prober depends on mount for grub
-sys-boot/grub mount
+sys-boot/grub mount secureboot
+
+# Intel microcode - I like working laptops
+sys-firmware/intel-microcode initramfs dist-kernel

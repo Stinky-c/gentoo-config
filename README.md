@@ -8,11 +8,11 @@ Includes secure boot, and optionally zram backed build directory. This serves as
 ### System Info
 
 CPU: AMD Ryzen 7 7735U with Radeon Graphics
-Ram: 32GB
+Ram: 32 gigabytes
 
-### Downloading this repo
+### Downloading This Repo
 
-A way to download all configs and copy to correct places. Clones to a temp directory then makes and exracts an archive from the HEAD.
+A way to download all configs and copy to correct places. Clones to a temp directory then makes and extracts an archive from the HEAD.
 Tar will preserve permissions on the overwritten files and always start placing files in `/mnt/gentoo`
 
 ```sh
@@ -32,7 +32,8 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
    2. Generate the fstab: `genfstab -U /mnt/gentoo`
    3. Chroot
 4. Copy portage configurations
-   1. [Quick Download](#downloading-this-repo) (Must execute outside of chroot)
+   1. May need to sync a clock. `chronyd -q`
+   2. [Quick Download](#downloading-this-repo) (Must execute outside of chroot)
 5. Update extras
    1. Update timezone: `ln -sf ../usr/share/zoneinfo/America/Los_Angeles /etc/localtime`
    2. Update locales: [`locale.gen`](etc/locale.gen) and `locale-gen`
@@ -42,19 +43,21 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
    3. `emerge --sync --quiet` first. If this does not work try the next one
    4. `emerge-webrsync` if behind a firewall
 7. Update world (optional)
-   1. `emerge --ask --verbose --update --deep --newuse @world`
-   2. Emerge [`@toolkit`](#toolkit-set), [`@fstools`](#fstools-set), and [`@networking`](#networking-set)
+   1. Emerge [`@toolkit`](#toolkit-set). This is a set of tools for updating the rest of the system
+   2. Update [`00cpu-flags`](etc/portage/package.use/00cpu-flags) and [`00video-drivers`](etc/portage/package.use/00video-drivers). This includes video drivers.
+   3. Update the world set. `emerge --ask --verbose --update --deep --newuse @world`
+   4. Finally emerge [`@fstools`](#fs-tools-set), and [`@networking`](#networking-set)
 8. [Boot setup](#boot-setup)
    1. Install a kernel (`sys-kernel/gentoo-kernel-bin`)
    2. Emerge [`@boot`](#boot-set)
 9. [Continuing Setup](#continuing-setup)
-
-Final: `dispatch-conf`.
-`z` to keep old
+   1. Run Systemd preset
+   2. Set up user and root password
+10. [Reboot Pre-checks](#reboot-pre-check)
 
 ## Partition Layout
 
-This partion layout is important to configure properly in fdisk. When using the proper [partion GUIDs](https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs) systemd can automount everything including root. See [Discoverable Partions Specification](https://uapi-group.org/specifications/specs/discoverable_partitions_specification/).
+This partition layout is important to configure properly in fdisk. When using the proper [partition GUIDs](https://en.wikipedia.org/wiki/GUID_Partition_Table#Partition_type_GUIDs) Systemd can automount everything including root. See [Discoverable Partition Specification](https://uapi-group.org/specifications/specs/discoverable_partitions_specification/).
 
 | Label | FS Type    | Part. Type (fdisk)  | Size         | Mount Point | Notes                                                                                                              |
 | ----- | ---------- | ------------------- | ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -76,13 +79,13 @@ mkswap -L SWAP /dev/sdZ3
 
 Swap must be mounted with a command, note that swap uses a command. Make sure to create the correct folder on rootfs.
 
-| Device file    | Purpose                                | Mount Point          |
-| -------------- | -------------------------------------- | -------------------- |
-| /dev/sdZ1      | Grub efi files                         | `[/mnt/gentoo]/efi`  |
-| /dev/sdZ2      | Grub boot Configuration                | `[/mnt/gentoo]/boot` |
-| /dev/sdZ3      | Swap space                             | `swapon /dev/sdZ3`   |
-| /dev/sdZ4      | LVM Data                               |                      |
-| /dev/vg0/lvol1 | LVM logical volume 0 on volume group 0 | `[/mnt/gentoo]/`     |
+| Device file      | Purpose                                | Mount Point          |
+| ---------------- | -------------------------------------- | -------------------- |
+| `/dev/sdZ1`      | Grub EFI files                         | `[/mnt/gentoo]/efi`  |
+| `/dev/sdZ2`      | Grub boot Configuration                | `[/mnt/gentoo]/boot` |
+| `/dev/sdZ3`      | Swap space                             | `swapon /dev/sdZ3`   |
+| `/dev/sdZ4`      | LVM Data                               |                      |
+| `/dev/vg0/lvol1` | LVM logical volume 0 on volume group 0 | `[/mnt/gentoo]/`     |
 
 ## LVM Setup
 
@@ -154,6 +157,7 @@ Use the `systemd-setup.sh` script to setup systemd.
 | `app-editors/vim`                   | Vim better than Nano                                                |
 | `sys-apps/zram-generator`           | See [`zram-generator.conf`](etc/systemd/zram-generator.conf) config |
 | `sys-block/io-scheduler-udev-rules` | Not needed, but may be useful for kernel tuning                     |
+| `sys-firmware/intel-microcode`      | Intel microcode                                                     |
 
 ### Networking Set
 
@@ -203,6 +207,8 @@ Use the `systemd-setup.sh` script to setup systemd.
 | `sys-boot/os-prober`       | Grub tool to locate other OS boot partitions                     |
 | `sys-boot/shim`            | Signed secureboot shim to load grub. Signed with Microsoft keys. |
 | `sys-boot/efibootmgr`      | Used to manage efi vars                                          |
+| `sys-boot/mokutil`         | Allows loading MOK (Machine Owner Key)                           |
+| `app-crypt/sbctl`          | Handles signing keys. Also includes a signing hook just in case  |
 
 ### Desktop Set
 
@@ -248,28 +254,63 @@ See my [dotfiles](https://github.com/Stinky-c/dotfiles/tree/desktop-niri)
 
 [^](#step-by-step)
 
-Systemd profiles default to `kernel-install`, and GRUB requires kernels to be installed to `/boot`. Use ugrd for the ram disk and shim for secure boot.
+Systemd profiles default to `kernel-install`, and GRUB requires kernels to be installed to `/boot`. Use `ugrd` for the ram disk and shim for secure boot.
 
-Emerge a kernel (`sys-kernel/gentoo-kernel-bin`), then firmware (`sys-kernel/linux-firmware`), reconfigure the kernel, and finally install [`@boot`](#boot-set)
+First oneshot `app-crypt/sbctl` before anything else to generate secure boot signing keys. Then Emerge a kernel (`sys-kernel/gentoo-kernel-bin`), firmware (`sys-kernel/linux-firmware`), and the [`@boot`](#boot-set) set at the same time.
+If targeting an Intel CPU, also emerge the Intel microcode `sys-firmware/intel-microcode`.
 
-Finally, extra commmands to finish a grub installation and configuration. Emerge selection 3.
+Finally, extra commands to finish a Grub installation and configuration.
 
 ```sh
-# install grub to /efi
+# Needed for signing keys
+emerge --oneshot --ask --verbose app-crypt/sbctl
+sbctl create-keys
+
+# Now emerge the @boot set
+
+# Install grub to /efi
 grub-install --efi-directory=/efi
 grub-mkconfig -o /boot/grub/grub.cfg
+
 
 # Copy signed shim, mokmanager, and grub
 # use `/usr/local/share/copy-shim.sh` to copy these
 cp /usr/share/shim/BOOTX64.EFI /efi/EFI/gentoo/shimx64.efi
 cp /usr/share/shim/mmx64.efi /efi/EFI/gentoo/mmx64.efi
 cp /usr/lib/grub/grub-x86_64.efi.signed /efi/EFI/gentoo/grubx64.efi
+
 # set efi to use shim to boot grub
 # update disk and part
 efibootmgr --disk /dev/sda --part 1 --create -L "gentoo via shim" -l '\EFI\gentoo\shimx64.efi'
 
 # Use -B to delete record and -b to specify which record
 efibootmgr -B -b <num>
+```
+
+If full secure boot management is desired use [`sbctl` Only Setup](#sbctl-only-setup) otherwise follow keep following the above instruction. Without extra configuration both setups do not protect anything and only provide boot integrity.
+
+### `sbctl` Only Setup
+
+Use `app-crypt/sbctl` to manage everything. See `sbctl` [docs](https://github.com/Foxboron/sbctl/blob/master/docs/workflow-example.md) for the example workflow.
+To enter secureboot Setup Mode delete all keys either with an `Clear Secure Boot Keys` option or manually delete all keys. Then save and reset.
+To verify entering setup mode, boot and use sbctl to verify in setup mode (`sbctl status`).
+After enrolling keys (make sure to add Microsoft keys), reboot to verify setup mode is now disabled (do not forget to sign necessary files before rebooting).
+
+This creates keys and enrolls them.
+
+```sh
+# Check the status, secure boot must be off first to continue.
+sbctl status
+
+# Create the keys. Default location is '/var/lib/sbctl/keys'.
+sbctl create-keys
+
+# Enroll the newly create keys. This includes Microsoft keys too
+sbctl enroll-keys -m
+
+# If signing any extra files, use the following to also save the location to later resigning.
+sbctl -s /path/to/file
+sbctl -s /efi/EFI/gentoo/grubx64.efi
 ```
 
 ## Continuing Setup
@@ -281,6 +322,7 @@ Use [`systemd-setup.sh`](usr/local/share/systemd-setup.sh) to setup systemd.
 # Need a root password
 passwd
 
+# Use the systemd setup script /usr/local/share/systemd-setup.sh
 # Sets machine id, hostname, and enables preset services
 systemd-machine-id-setup --print
 systemd-firstboot --prompt
@@ -294,8 +336,9 @@ systemctl enable systemd-resolved.service
 ### Networking
 
 Use `net-misc/networkmanager` with `systemd-resolved`.
+TODO: Extras here
 
-Emerge `net-misc/networkmanager` and enable at boot `systemctl enable NetworkManager`.
+Network Manager is enabled in systemd preset, however the service is `NetworkManager.service`.
 
 ## User setup
 
@@ -307,15 +350,22 @@ passwd cole
 
 [^](#step-by-step)
 
+## Reboot pre-Check
+
+- UEFI boot records pointing to correct disk and both EFI binaries at `\EFI\gentoo\grubx64.efi` and `\EFI\gentoo\shimx64.efi`.
+  - Use `efibootmgr` to see all UEFI boot records.
+- Boot files present.
+  - `System.map-<dist>` - Systemd Map
+  - `amd-uc.img` - AMD Microcode
+  - `config-<dist>` - Kernel makefile configuration
+  - `initramfs-<dist>.img` - Ugrd Initramfs
+  - `vmlinuz-<dist>` - Kernel image
+
 ## Tricks
 
 - [Portage on tmpfs](https://wiki.gentoo.org/wiki/Portage_TMPDIR_on_tmpfs) or zram
 - [zram](https://wiki.gentoo.org/wiki/Zram)
 - [zswap on boot](https://wiki.gentoo.org/wiki/Zswap#Using_the_kernel_commandline)
-
-## Issues
-
-- Expand to only allow signed modules, and secure boot
 
 ## Links
 
@@ -339,14 +389,14 @@ emerge [`@noctalia`](#noctalia-set) or [`@dotfiles`](#dotfiles-set)
 
 ## Index
 
-a brief description of misc files.
+A brief description of misc files.
 
 ### Scripts
 
 These script are for convivence and are snippets taken from the wiki. They are stored inside `/usr/local/share/`
 
 - [`copy-shim.sh`](usr/local/share/copy-shim.sh)
-  - Copies shim, mokmanager and the signed grub binary to the EFI directory.
+  - Copies shim, and mokmanager to the EFI directory.
 - [`sccache-setup.sh`](usr/local/share/sccache-setup.sh)
   - Creates and sets permissions for sccache to be used
 - [`systemd-setup.sh`](usr/local/share/systemd-setup.sh)

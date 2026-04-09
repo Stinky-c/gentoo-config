@@ -28,14 +28,17 @@ systemctl preset-all
 
 # Should not fail if missing service
 set +e
+echo "Explicit Disable"
 for service in "${DISABLED[@]}"; do
     systemctl disable $service
 done
 
+echo "Explicit Enable"
 for service in "${ENABLED[@]}"; do
     systemctl enable $service
 done
 
+echo "Explicit Mask"
 for service in "${MASKED[@]}"; do
     systemctl mask $service
 done

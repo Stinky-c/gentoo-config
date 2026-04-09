@@ -4,3 +4,5 @@ sys-boot/grub
 sys-boot/os-prober
 sys-boot/shim
 sys-boot/efibootmgr
+sys-boot/mokutil
+app-crypt/sbctl
