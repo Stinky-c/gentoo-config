@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+P=$(type -p $0)
+GPU_DRIVER=$(grep '^#V ' $P | sed 's/#V //g')
+
+help(){
+    echo "Pass in either 'gpu' or 'cpu' to configure use flags"
+}
+
+gpu(){
+    echo "Unimplmented"
+    exit 1
+
+    CHOICE=$(echo $GPU_DRIVER | fzf --mutli | sed 's/\o0/ /g')
+    sed --in-place=.bak --regexp-extended "s/#? ?VIDEO_CARDS=.*/VIDEO_CARDS=\"$CHOICE\"/g" /etc/portage/make.conf
+}
+
+cpu(){
+    PACKAGEUSE_CPU="/etc/portage/package.use/00cpu-flags"
+    echo "# Auto generated with 'pick-driver'" > $PACKAGEUSE_CPU
+    echo "*/* $(cpuid2cpuflags)" > $PACKAGEUSE_CPU
+}
+
+case "$@" in
+    cpu)
+        cpu
+    gpu)
+        gpu
+    *)
+        help
+esac
+
+
+#V nvidia
+#V nouveau
+#V amdgpu radeonsi
+#V intel
+#V vc4
+#V virgl

@@ -39,17 +39,15 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
    2. Update locales: [`locale.gen`](etc/locale.gen) and `locale-gen`
 6. Update repos
    1. Update keys: `getuto`
-   2. Oneshot git for now: `emerge --ask --oneshot dev-vcs/git`
-   3. `emerge --sync --quiet` first. If this does not work try the next one
-   4. `emerge-webrsync` if behind a firewall
+   2. Update the gentoo repo to include git. `emerge-webrsync`
+   3. Oneshot git for now: `emerge --ask --oneshot dev-vcs/git`
+   4. Use `emerge --sync` to update all repos.
 7. Update world (optional)
    1. Emerge [`@toolkit`](#toolkit-set). This is a set of tools for updating the rest of the system
-   2. Update [`00cpu-flags`](etc/portage/package.use/00cpu-flags) and [`00video-drivers`](etc/portage/package.use/00video-drivers). This includes video drivers.
+   2. Update drivers [`00cpu-flags`](etc/portage/package.use/00cpu-flags) and [`00video-drivers`](etc/portage/package.use/00video-drivers). This includes video drivers.
    3. Update the world set. `emerge --ask --verbose --update --deep --newuse @world`
    4. Finally emerge [`@fstools`](#fs-tools-set), and [`@networking`](#networking-set)
 8. [Boot setup](#boot-setup)
-   1. Install a kernel (`sys-kernel/gentoo-kernel-bin`)
-   2. Emerge [`@boot`](#boot-set)
 9. [Continuing Setup](#continuing-setup)
    1. Run Systemd preset
    2. Set up user and root password
@@ -157,7 +155,6 @@ Use the `systemd-setup.sh` script to setup systemd.
 | `app-editors/vim`                   | Vim better than Nano                                                |
 | `sys-apps/zram-generator`           | See [`zram-generator.conf`](etc/systemd/zram-generator.conf) config |
 | `sys-block/io-scheduler-udev-rules` | Not needed, but may be useful for kernel tuning                     |
-| `sys-firmware/intel-microcode`      | Intel microcode                                                     |
 
 ### Networking Set
 
@@ -194,10 +191,11 @@ Use the `systemd-setup.sh` script to setup systemd.
 
 ### Boot Set
 
-| Identifier                     | Notes |
-| ------------------------------ | ----- |
-| `sys-kernel/gentoo-kernel-bin` |       |
-| `sys-kernel/linux-firmware`    |       |
+| Identifier                     | Notes                                       |
+| ------------------------------ | ------------------------------------------- |
+| `sys-kernel/gentoo-kernel-bin` | Kernel with Gentoo patches. Simplest option |
+| `sys-kernel/linux-firmware`    | Firmware needed for boot                    |
+| `sys-firmware/intel-microcode` | Intel microcode                             |
 
 | Identifier                 | Notes                                                            |
 | -------------------------- | ---------------------------------------------------------------- |
@@ -228,27 +226,19 @@ Skip installing [mise](https://mise.jdx.dev/) via portage. I like how fast mise 
 | `media-fonts/monaspace`             | My primary monospace font. Present in guru |
 | `media-fonts/jetbrains-mono`        | My fallback monospace font                 |
 | `app-misc/fastfetch`                | pointless but fun                          |
+| `gui-apps/noctalia-shell`           | [docs](https://docs.noctalia.dev/)         |
+| `app-shells/starship`               | Cool terminal prompt                       |
 
 ### Noctalia Set
 
 Testing out [noctalia](https://noctalia.dev/) to see if I like it.
 
-| Identifier                | Notes                              |
-| ------------------------- | ---------------------------------- |
-| `gui-apps/noctalia-shell` | [docs](https://docs.noctalia.dev/) |
+| Identifier | Notes |
+| ---------- | ----- |
 
 ### Dotfiles Set
 
 See my [dotfiles](https://github.com/Stinky-c/dotfiles/tree/desktop-niri)
-
-| Identifier            | Notes                            |
-| --------------------- | -------------------------------- |
-| `gui-apps/swaybg`     | Dead simple background for niri. |
-| `gui-apps/swayidle`   | Idle management daemon.          |
-| `gui-apps/swaylock`   | Wayland locking.                 |
-| `gui-apps/mako`       | Notifcation daemon               |
-| `gui-apps/waybar`     |                                  |
-| `app-shells/starship` | Cool terminal prompt             |
 
 ## Boot Setup
 
@@ -266,12 +256,17 @@ Finally, extra commands to finish a Grub installation and configuration.
 emerge --oneshot --ask --verbose app-crypt/sbctl
 sbctl create-keys
 
+# Create a DER cert for mokutil to use
+# Importing requires setting a MOK password. DO NOT FORGET PASSWORD
+openssl x509 -in /var/lib/sbctl/keys/db/db.pem -outform der -out /boot/sbcert.der
+mokutil --import /boot/sbcert.der
+
 # Now emerge the @boot set
+emerge --ask sys-kernel/gentoo-kernel-bin sys-kernel/linux-firmware @boot
 
 # Install grub to /efi
 grub-install --efi-directory=/efi
 grub-mkconfig -o /boot/grub/grub.cfg
-
 
 # Copy signed shim, mokmanager, and grub
 # use `/usr/local/share/copy-shim.sh` to copy these
@@ -360,6 +355,8 @@ passwd cole
   - `config-<dist>` - Kernel makefile configuration
   - `initramfs-<dist>.img` - Ugrd Initramfs
   - `vmlinuz-<dist>` - Kernel image
+- `/etc/fstab` contains mounted filesystems
+  - Use `genfstab` from live ISO to configure
 
 ## Tricks
 
@@ -385,7 +382,20 @@ Defined in [`ccache.conf`](etc/portage/env/ccache.conf). Apply to a package usin
 
 ## Desktop
 
-emerge [`@noctalia`](#noctalia-set) or [`@dotfiles`](#dotfiles-set)
+Emerge [`@desktop`](#desktop-set) and use chezmoi to include dotfiles.
+
+## Drivers
+
+- [Use Expand](https://packages.gentoo.org/useflags/expand#video_cards)
+- [`make.conf` Video Cards](https://wiki.gentoo.org/wiki//etc/portage/make.conf#VIDEO_CARDS)
+  - Update after changing: `emerge --ask --changed-use --deep @world`
+  - Nvidia - `nvidia`
+  - Nvidia open source - `nouveau`
+    - Nvidia except Maxwell, Pascal, and Volta
+  - AMD - `amdgpu radeonsi`
+  - QEMU/KVM/Virtual - `virgl`
+  - Intel - `intel`
+    - Gen 1-3 use `intel i915`
 
 ## Index
 

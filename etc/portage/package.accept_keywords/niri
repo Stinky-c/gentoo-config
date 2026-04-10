@@ -5,3 +5,5 @@ gui-apps/xwayland-satellite ~amd64
 gui-apps/noctalia-shell ~amd64
 gui-apps/noctalia-qs ~amd64
 app-misc/brightnessctl ~amd64
+
+app-admin/chezmoi ~amd64

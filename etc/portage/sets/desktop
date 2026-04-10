@@ -1,10 +1,17 @@
 gui-wm/niri
 sys-apps/xdg-desktop-portal
 sys-apps/xdg-desktop-portal-gtk
-sys-apps/xdg-desktop-portal-gnom
+sys-apps/xdg-desktop-portal-gnome
 gnome-base/gnome-keyring
 mate-extra/mate-polkit
 x11-terms/ghostty
 media-fonts/monaspace
 media-fonts/jetbrains-mono
 app-misc/fastfetch
+app-shells/starship
+
+# noctalia shell
+# https://docs.noctalia.dev/
+gui-apps/noctalia-shell
+# dotfiles manager
+app-admin/chezmoi
