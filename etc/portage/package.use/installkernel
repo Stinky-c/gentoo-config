@@ -1,4 +1,4 @@
-sys-kernel/installkernel grub ugrd -systemd
+sys-kernel/installkernel -* grub ugrd systemd
 
 # Dedupe and compress firmware
 sys-kernel/linux-firmware deduplicate compress-zstd
@@ -8,3 +8,6 @@ sys-boot/grub mount secureboot
 
 # Intel microcode - I like working laptops
 sys-firmware/intel-microcode initramfs dist-kernel
+
+# Not quite a kernel thing but its firmware
+sys-apps/fwupd bluetooth uefi tpm systemd nvme modemmanager policykit flashrom

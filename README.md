@@ -265,7 +265,7 @@ mokutil --import /boot/sbcert.der
 emerge --ask sys-kernel/gentoo-kernel-bin sys-kernel/linux-firmware @boot
 
 # Install grub to /efi
-grub-install --efi-directory=/efi
+grub-install --efi-directory=/efi --no-nvram
 grub-mkconfig -o /boot/grub/grub.cfg
 
 # Copy signed shim, mokmanager, and grub
@@ -373,6 +373,7 @@ passwd cole
 - [Plymouth](https://wiki.gentoo.org/wiki/Plymouth) - A screen for during boot
 - virtio-fs - [home](https://virtio-fs.gitlab.io/) & [gentoo wiki](https://wiki.gentoo.org/wiki/Virtiofs)
 - [portage patches](https://wiki.gentoo.org/wiki//etc/portage/patches)
+- [fwupd](https://wiki.gentoo.org/wiki/Fwupd)
 
 ## Ccache
 

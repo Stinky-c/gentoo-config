@@ -13,3 +13,7 @@ app-misc/jq
 app-admin/sudo
 app-editors/vim
 app-eselect/eselect-repository
+sys-apps/fwupd
+app-text/wgetpaste
+sys-devel/patch
+sys-apps/diffutils

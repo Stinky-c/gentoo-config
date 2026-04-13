@@ -5,4 +5,7 @@ sys-boot/os-prober
 sys-boot/shim
 sys-boot/efibootmgr
 sys-boot/mokutil
+app-crypt/efitools
+app-crypt/sbsigntools
+dev-libs/openssl
 app-crypt/sbctl
