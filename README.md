@@ -44,9 +44,10 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
    4. Use `emerge --sync` to update all repos.
 7. Update world (optional)
    1. Emerge [`@toolkit`](#toolkit-set). This is a set of tools for updating the rest of the system
-   2. Update drivers [`00cpu-flags`](etc/portage/package.use/00cpu-flags) and [`00video-drivers`](etc/portage/package.use/00video-drivers). This includes video drivers.
-   3. Update the world set. `emerge --ask --verbose --update --deep --newuse @world`
-   4. Finally emerge [`@fstools`](#fs-tools-set), and [`@networking`](#networking-set)
+   2. Execute [`00cpu-flags`](etc/portage/package.use/00cpu-flags) to update CPU.
+   3. Update [`00video-drivers`](etc/portage/package.use/00video-drivers)
+   4. Update the world set. `emerge --ask --verbose --update --deep --newuse @world`
+   5. Finally emerge [`@fstools`](#fs-tools-set), and [`@networking`](#networking-set)
 8. [Boot setup](#boot-setup)
 9. [Continuing Setup](#continuing-setup)
    1. Run Systemd preset
@@ -60,7 +61,7 @@ This partition layout is important to configure properly in fdisk. When using th
 | Label | FS Type    | Part. Type (fdisk)  | Size         | Mount Point | Notes                                                                                                              |
 | ----- | ---------- | ------------------- | ------------ | ----------- | ------------------------------------------------------------------------------------------------------------------ |
 | EFI   | fat32      | ESP (1)             | 1G           | /efi        | Used for only EFI binaries. Leave 0.5G space to increase if needed.                                                |
-| BOOT  | ext4       | Extended boot (142) | 1G           | /boot       | A boot partition needed for GRUB configuration stuff.                                                              |
+| BOOT  | ext4       | Extended boot (142) | 1G           | /boot       | Where kernel, and initramfs is kept.                                                                               |
 | SWAP  | swap       | Swap (19)           | See Notes    |             | [Swap Size - Gentoo Wiki](https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Disks#What_about_swap_space.3F) |
 | ROOT  | LVM + ext4 | LVM (44)            | Rest of disk | /           | A plain ext4 partition.                                                                                            |
 
@@ -79,8 +80,8 @@ Swap must be mounted with a command, note that swap uses a command. Make sure to
 
 | Device file      | Purpose                                | Mount Point          |
 | ---------------- | -------------------------------------- | -------------------- |
-| `/dev/sdZ1`      | Grub EFI files                         | `[/mnt/gentoo]/efi`  |
-| `/dev/sdZ2`      | Grub boot Configuration                | `[/mnt/gentoo]/boot` |
+| `/dev/sdZ1`      | EFI files                              | `[/mnt/gentoo]/efi`  |
+| `/dev/sdZ2`      | boot Entries                           | `[/mnt/gentoo]/boot` |
 | `/dev/sdZ3`      | Swap space                             | `swapon /dev/sdZ3`   |
 | `/dev/sdZ4`      | LVM Data                               |                      |
 | `/dev/vg0/lvol1` | LVM logical volume 0 on volume group 0 | `[/mnt/gentoo]/`     |
@@ -197,18 +198,22 @@ Use the `systemd-setup.sh` script to setup systemd.
 | `sys-kernel/linux-firmware`    | Firmware needed for boot                    |
 | `sys-firmware/intel-microcode` | Intel microcode                             |
 
-| Identifier                 | Notes                                                            |
-| -------------------------- | ---------------------------------------------------------------- |
-| `sys-kernel/installkernel` | Manages building, and bundling kernel into initramfs             |
-| `sys-kernel/ugrd`          | Ram disk generator                                               |
-| `sys-boot/grub`            | Boot loader                                                      |
-| `sys-boot/os-prober`       | Grub tool to locate other OS boot partitions                     |
-| `sys-boot/shim`            | Signed secureboot shim to load grub. Signed with Microsoft keys. |
-| `sys-boot/efibootmgr`      | Used to manage efi vars                                          |
-| `sys-boot/mokutil`         | Allows loading MOK (Machine Owner Key)                           |
-| `app-crypt/sbctl`          | Handles signing keys. Also includes a signing hook just in case  |
+| Identifier                 | Notes                                                                                                           |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `sys-kernel/installkernel` | Manages building, and bundling kernel into initramfs                                                            |
+| `sys-kernel/ugrd`          | Ram disk generator                                                                                              |
+| `sys-boot/shim`            | Signed secureboot shim to load `grubx64.efi`. Signed with Microsoft keys.                                       |
+| `sys-boot/efibootmgr`      | Used to manage efi vars                                                                                         |
+| `sys-boot/mokutil`         | Allows loading MOK (Machine Owner Key)                                                                          |
+| `app-crypt/sbctl`          | Handles signing keys. Also includes a signing hook just in case                                                 |
+| `app-crypt/efitools`       | Tools for managing EFI vars                                                                                     |
+| `app-crypt/sbsigntools`    | Tools used by Gentoo to sign file                                                                               |
+| `sys-apps/fwupd`           | Firmware update stuff                                                                                           |
+| `__microcode__`            | A marker package for [`00cpu-flags`](etc/portage/package.use/00cpu-flags) to replace with the correct microcode |
 
 ### Desktop Set
+
+See my [dotfiles](https://github.com/Stinky-c/dotfiles/tree/laptop-gentoo-niri)
 
 Able to pull in zig as a binpkg to prevent ghostty building it from source. `emerge --ask --oneshot dev-lang/zig-bin`
 
@@ -222,29 +227,18 @@ Skip installing [mise](https://mise.jdx.dev/) via portage. I like how fast mise 
 | `sys-apps/xdg-desktop-portal-gnome` | then gnome as secondary                    |
 | `gnome-base/gnome-keyring`          | Secret manager                             |
 | `mate-extra/mate-polkit`            | gnome polkit is unmaintained               |
-| `x11-terms/ghostty`                 |                                            |
+| `x11-terms/ghostty`                 | Terminal that I prefer                     |
 | `media-fonts/monaspace`             | My primary monospace font. Present in guru |
 | `media-fonts/jetbrains-mono`        | My fallback monospace font                 |
 | `app-misc/fastfetch`                | pointless but fun                          |
 | `gui-apps/noctalia-shell`           | [docs](https://docs.noctalia.dev/)         |
 | `app-shells/starship`               | Cool terminal prompt                       |
 
-### Noctalia Set
-
-Testing out [noctalia](https://noctalia.dev/) to see if I like it.
-
-| Identifier | Notes |
-| ---------- | ----- |
-
-### Dotfiles Set
-
-See my [dotfiles](https://github.com/Stinky-c/dotfiles/tree/desktop-niri)
-
 ## Boot Setup
 
 [^](#step-by-step)
 
-Systemd profiles default to `kernel-install`, and GRUB requires kernels to be installed to `/boot`. Use `ugrd` for the ram disk and shim for secure boot.
+Systemd profiles default to `kernel-install`. Use `ugrd` for the ram disk and `shim` for secure boot.
 
 First oneshot `app-crypt/sbctl` before anything else to generate secure boot signing keys. Then Emerge a kernel (`sys-kernel/gentoo-kernel-bin`), firmware (`sys-kernel/linux-firmware`), and the [`@boot`](#boot-set) set at the same time.
 If targeting an Intel CPU, also emerge the Intel microcode `sys-firmware/intel-microcode`.
@@ -264,19 +258,16 @@ mokutil --import /boot/sbcert.der
 # Now emerge the @boot set
 emerge --ask sys-kernel/gentoo-kernel-bin sys-kernel/linux-firmware @boot
 
-# Install grub to /efi
-grub-install --efi-directory=/efi --no-nvram
-grub-mkconfig -o /boot/grub/grub.cfg
+# Install systemd-boot to /efi
+bootctl --no-nvram
+cp /efi/EFI/systemd/systemd-bootx64.efi /efi/EFI/systemd/grubx64.efi
 
-# Copy signed shim, mokmanager, and grub
-# use `/usr/local/share/copy-shim.sh` to copy these
-cp /usr/share/shim/BOOTX64.EFI /efi/EFI/gentoo/shimx64.efi
-cp /usr/share/shim/mmx64.efi /efi/EFI/gentoo/mmx64.efi
-cp /usr/lib/grub/grub-x86_64.efi.signed /efi/EFI/gentoo/grubx64.efi
+# Copy signed shim, mokmanager
+bash /usr/local/share/copy-shim.sh
 
 # set efi to use shim to boot grub
 # update disk and part
-efibootmgr --disk /dev/sda --part 1 --create -L "gentoo via shim" -l '\EFI\gentoo\shimx64.efi'
+efibootmgr --disk /dev/sda --part 1 --create -L "gentoo via shim" -l '\EFI\systemd\shimx64.efi'
 
 # Use -B to delete record and -b to specify which record
 efibootmgr -B -b <num>
@@ -349,12 +340,16 @@ passwd cole
 
 - UEFI boot records pointing to correct disk and both EFI binaries at `\EFI\gentoo\grubx64.efi` and `\EFI\gentoo\shimx64.efi`.
   - Use `efibootmgr` to see all UEFI boot records.
-- Boot files present.
-  - `System.map-<dist>` - Systemd Map
-  - `amd-uc.img` - AMD Microcode
-  - `config-<dist>` - Kernel makefile configuration
-  - `initramfs-<dist>.img` - Ugrd Initramfs
-  - `vmlinuz-<dist>` - Kernel image
+- Boot files present under `/boot/<machine id>`
+  - `{amd,intel}-microcode` - Microcode
+  - `initrd` - Ugrd Initramfs
+  - `linux` - Kernel image
+  - `sbcert.der` - MOK cert in DER format
+- EFI files present.
+  - `grubx64.efi` - Shim always loads this even though I am using systemd-boot
+  - `mmx64.efi` - MOK Manager
+  - `shimx64.efi` - Shim
+  - `systemd-bootx64.efi`
 - `/etc/fstab` contains mounted filesystems
   - Use `genfstab` from live ISO to configure
 

@@ -1,0 +1,37 @@
+post_pkg_postinst() {
+	# Sanity check
+	if [[ "$(bootctl is-installed)" == "yes" ]]; then
+		ebegin "Updating systemd-boot"
+		bootctl --no-variables --graceful update
+		eend ${?} || ewarn "Updating systemd-boot failed"
+
+		# If shim is installed, copy it to ESP as well
+		if use secureboot; then
+			if has_version sys-boot/shim; then
+				ebegin "Updating shim"
+				local return=0
+				local bootpath=$(bootctl -p)
+				local sdbootpath=${bootpath}/EFI/systemd/systemd-bootx64.efi
+				local grub4shimpath=${bootpath}/EFI/systemd/grubx64.efi
+				local shim=${EROOT}/usr/share/shim/BOOTX64.EFI
+				local mm=${EROOT}/usr/share/shim/mmx64.efi
+
+				# Copy shim to ${ESP}/BOOT/BOOTX64.efi
+				cp "${shim}" "${bootpath}/EFI/BOOT/" || ( ewarn "Failed to install shim" && return=1 )
+				# And copy the corresponding MokManager
+				cp "${mm}" "${bootpath}/EFI/BOOT/" || ( ewarn "Failed to install MokManager" && return=1 )
+				# Copy systemd-boot to where shim looks for the bootloader
+				cp ${sdbootpath} ${grub4shimpath} || ( ewarn \
+				"Failed to copy systemd-boot to location expected by shim" && return=1)
+				eend ${return} || ewarn "Updating shim failed"
+			else
+				ewarn "sys-boot/shim is not installed! Ensure that your key is"
+				ewarn "registered with the system firmware or secure boot might fail!"
+			fi
+		fi
+	else
+		elog "No installation of systemd-boot detected, not updating"
+		elog "systemd-boot. If the system is using systemd-boot as the"
+		elog "bootloader then update it manually with: bootctl update."
+	fi
+}

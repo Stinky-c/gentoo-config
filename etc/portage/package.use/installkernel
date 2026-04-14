@@ -1,4 +1,4 @@
-sys-kernel/installkernel -* grub ugrd systemd
+sys-kernel/installkernel -* ugrd systemd systemd-boot
 
 # Dedupe and compress firmware
 sys-kernel/linux-firmware deduplicate compress-zstd
@@ -10,4 +10,4 @@ sys-boot/grub mount secureboot
 sys-firmware/intel-microcode initramfs dist-kernel
 
 # Not quite a kernel thing but its firmware
-sys-apps/fwupd bluetooth uefi tpm systemd nvme modemmanager policykit flashrom
+sys-apps/fwupd bluetooth uefi tpm systemd nvme modemmanager policykit flashrom gnutls

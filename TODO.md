@@ -3,40 +3,40 @@
 - [ ] Ensure permissions are correct
 - [ ] Tweak the kernel?
 - [ ] Double check audio system is functional
-    - May need a systemd user-preset
+  - May need a systemd user-preset
 - [ ] Double check kernel boot args are correct
 - [ ] Maintenance Guide
 - [ ] portage build env works
-    - sccache
-    - zram
-    - lto
+  - sccache
+  - zram
+  - lto
 - [ ] Ensure hibernate support works
 - [ ] Checkout lvm snapshotting
 - [ ] Smart-live-rebuild?
-    - <https://packages.gentoo.org/packages/app-portage/smart-live-rebuild>
+  - <https://packages.gentoo.org/packages/app-portage/smart-live-rebuild>
 - [ ] Clean up scripts
-    - Check out [ideas](#ideas)
+  - Check out [ideas](#ideas)
 - [ ] Theme system
-    - Grub
-    - Dotfiles
+  - Grub
+  - Dotfiles
 - [ ] Figure out nullmail
-    - `emerge --config mail-mta/nullmailer`
+  - `emerge --config mail-mta/nullmailer`
 - [ ] Better integrate bat
-    - man pages
-    - portage output
-    - Include [gentoo-syntax-bat](https://github.com/Stinky-c/gentoo-syntax-bat)
+  - man pages
+  - portage output
+  - Include [gentoo-syntax-bat](https://github.com/Stinky-c/gentoo-syntax-bat)
 - [ ] time every time something is emerged
 
 ## Ebuilds
 
 - [ ] batctl - battery management
-    - <https://github.com/Ooooze/batctl>
-    - <https://wiki.gentoo.org/wiki/Writing_go_Ebuilds>
-    - <https://devmanual.gentoo.org/eclass-reference/go-module.eclass/index.html>
+  - <https://github.com/Ooooze/batctl>
+  - <https://wiki.gentoo.org/wiki/Writing_go_Ebuilds>
+  - <https://devmanual.gentoo.org/eclass-reference/go-module.eclass/index.html>
 - [ ] Amber-lang
-    - <https://docs.amber-lang.com/>
+  - <https://docs.amber-lang.com/>
 - [ ] strace-tui
-    - <https://github.com/Rodrigodd/strace-tui>
+  - <https://github.com/Rodrigodd/strace-tui>
 
 ## Ideas
 
