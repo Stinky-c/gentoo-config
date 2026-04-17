@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+if [[ -e /var/cache/eix/portage.eix ]]; then
+    rsync -ca /var/cache/eix/portage.eix /var/cache/exi/previous.eix;
+fi
+
+exi-update
+
+if [[ -e /var/cache/eix/previous.eix ]]; then
+    eix-diff;
+fi

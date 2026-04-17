@@ -16,10 +16,10 @@ post_pkg_postinst() {
 				local shim=${EROOT}/usr/share/shim/BOOTX64.EFI
 				local mm=${EROOT}/usr/share/shim/mmx64.efi
 
-				# Copy shim to ${ESP}/BOOT/BOOTX64.efi
-				cp "${shim}" "${bootpath}/EFI/BOOT/" || ( ewarn "Failed to install shim" && return=1 )
+				# Copy shim to ${ESP}/systemd/shimx64.efi
+				cp "${shim}" "${bootpath}/EFI/systemd/shimx64.efi" || ( ewarn "Failed to install shim" && return=1 )
 				# And copy the corresponding MokManager
-				cp "${mm}" "${bootpath}/EFI/BOOT/" || ( ewarn "Failed to install MokManager" && return=1 )
+				cp "${mm}" "${bootpath}/EFI/systemd/mmx64.efi" || ( ewarn "Failed to install MokManager" && return=1 )
 				# Copy systemd-boot to where shim looks for the bootloader
 				cp ${sdbootpath} ${grub4shimpath} || ( ewarn \
 				"Failed to copy systemd-boot to location expected by shim" && return=1)

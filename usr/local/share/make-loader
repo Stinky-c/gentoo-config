@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -ex
-cat <<EOF > "$0"
+cat <<EOF > "/efi/loader/loader.conf"
 timeout 12
 default $(cat /etc/machine-id)-*
 console-mode auto

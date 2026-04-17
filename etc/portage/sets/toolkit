@@ -5,6 +5,7 @@ sys-apps/bat
 sys-apps/bat-extras
 app-portage/gentoolkit
 app-portage/elogv
+app-portage/eix
 sys-apps/mlocate
 dev-util/ccache
 dev-util/sccache
@@ -17,4 +18,9 @@ app-text/wgetpaste
 sys-devel/patch
 sys-apps/diffutils
 dev-libs/openssl
+sys-apps/etckeeper
 
+# thermal and power management
+sys-power/thermald
+sys-power/upower
+sys-power/powertop

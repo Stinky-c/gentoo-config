@@ -9,9 +9,8 @@ media-fonts/monaspace
 media-fonts/jetbrains-mono
 app-misc/fastfetch
 app-shells/starship
-
-# noctalia shell
-# https://docs.noctalia.dev/
-gui-apps/noctalia-shell
 # dotfiles manager
 app-admin/chezmoi
+gui-apps/fuzzel
+gui-apps/waybar
+app-misc/brightnessctl

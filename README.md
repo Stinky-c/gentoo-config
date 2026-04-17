@@ -44,15 +44,18 @@ TMP_DIR=$(mktemp -D);  git clone --depth=1 https://github.com/Stinky-c/gentoo-co
    4. Use `emerge --sync` to update all repos.
 7. Update world (optional)
    1. Emerge [`@toolkit`](#toolkit-set). This is a set of tools for updating the rest of the system
-   2. Execute [`00cpu-flags`](etc/portage/package.use/00cpu-flags) to update CPU.
+   2. Execute [`/usr/local/share/package/cpu`](etc/portage/package.use/00cpu-flags) to update CPU.
    3. Update [`00video-drivers`](etc/portage/package.use/00video-drivers)
    4. Update the world set. `emerge --ask --verbose --update --deep --newuse @world`
    5. Finally emerge [`@fstools`](#fs-tools-set), and [`@networking`](#networking-set)
+   6. Configure system services `emerge --config --ask <atom>`
+   - `mail-mta/nullmailer`
 8. [Boot setup](#boot-setup)
 9. [Continuing Setup](#continuing-setup)
    1. Run Systemd preset
    2. Set up user and root password
 10. [Reboot Pre-checks](#reboot-pre-check)
+11. [Desktop Setup](#desktop)
 
 ## Partition Layout
 
@@ -69,7 +72,7 @@ This partition layout is important to configure properly in fdisk. When using th
 
 ```sh
 mkfs.fat -F 32 -n EFI /dev/sdZ1
-mkfs.ext4 -L BOOT /dev/sdZ2
+mkfs.fat -F 32 -n BOOT /dev/sdZ2
 mkswap -L SWAP /dev/sdZ3
 # complete LVM setup
 ```
@@ -251,16 +254,18 @@ emerge --oneshot --ask --verbose app-crypt/sbctl
 sbctl create-keys
 
 # Create a DER cert for mokutil to use
-# Importing requires setting a MOK password. DO NOT FORGET PASSWORD
 openssl x509 -in /var/lib/sbctl/keys/db/db.pem -outform der -out /boot/sbcert.der
-mokutil --import /boot/sbcert.der
 
 # Now emerge the @boot set
-emerge --ask sys-kernel/gentoo-kernel-bin sys-kernel/linux-firmware @boot
+# add /etc/kernel/cmdline
+emerge --ask @boot
 
 # Install systemd-boot to /efi
-bootctl --no-nvram
+bootctl install --variables=no
 cp /efi/EFI/systemd/systemd-bootx64.efi /efi/EFI/systemd/grubx64.efi
+
+# Importing requires setting a MOK password. DO NOT FORGET PASSWORD
+mokutil --import /boot/sbcert.der
 
 # Copy signed shim, mokmanager
 bash /usr/local/share/copy-shim.sh
@@ -308,25 +313,12 @@ Use [`systemd-setup.sh`](usr/local/share/systemd-setup.sh) to setup systemd.
 # Need a root password
 passwd
 
-# Use the systemd setup script /usr/local/share/systemd-setup.sh
+# Use the systemd setup script
 # Sets machine id, hostname, and enables preset services
-systemd-machine-id-setup --print
-systemd-firstboot --prompt
-systemctl preset-all
-
-# be sure to check and enable/disable services as needed here.
-systemctl mask systemd-networkd.service
-systemctl enable systemd-resolved.service
+bash /usr/local/share/systemd-setup.sh
 ```
 
-### Networking
-
-Use `net-misc/networkmanager` with `systemd-resolved`.
-TODO: Extras here
-
-Network Manager is enabled in systemd preset, however the service is `NetworkManager.service`.
-
-## User setup
+## User Setup
 
 ```sh
 # Follow the prompts

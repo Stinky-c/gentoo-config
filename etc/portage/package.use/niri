@@ -1,3 +1,6 @@
 gui-wm/niri dbus screencast systemd
 gui-apps/xwayland-satellite
 sys-apps/xdg-desktop-portal flatpak udev systemd
+
+gui-apps/waybar backlight evdev gps mpd mpris network niri tray upower wifi
+app-misc/fastfetch opencl ddcutil
